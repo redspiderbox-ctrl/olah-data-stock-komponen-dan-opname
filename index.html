@@ -140,7 +140,6 @@
 
         th.no-wrap-head { white-space: nowrap; }
 
-        /* Style untuk select kecil di dalam th */
         th select.sort-select {
             display: block; width: 100%; margin-top: 4px;
             padding: 3px 4px; font-size: 10px; border-radius: 4px;
@@ -289,7 +288,7 @@
                         <th class="no-wrap-head" style="width:50px;">No</th>
                         <th class="no-wrap-head">
                             Tipe Lokasi
-                            <select class="sort-select" onchange="sortTable('Tipe Lokasi', this.value)">
+                            <select class="sort-select" onchange="sortTableDOM('Tipe Lokasi', this.value)">
                                 <option value="default">Default</option>
                                 <option value="asc">A → Z</option>
                                 <option value="desc">Z → A</option>
@@ -297,7 +296,7 @@
                         </th>
                         <th class="no-wrap-head">
                             Nama
-                            <select class="sort-select" onchange="sortTable('Nama', this.value)">
+                            <select class="sort-select" onchange="sortTableDOM('Nama', this.value)">
                                 <option value="default">Default</option>
                                 <option value="asc">A → Z</option>
                                 <option value="desc">Z → A</option>
@@ -305,7 +304,7 @@
                         </th>
                         <th class="no-wrap-head">
                             Part
-                            <select class="sort-select" onchange="sortTable('Part', this.value)">
+                            <select class="sort-select" onchange="sortTableDOM('Part', this.value)">
                                 <option value="default">Default</option>
                                 <option value="asc">A → Z</option>
                                 <option value="desc">Z → A</option>
@@ -313,7 +312,7 @@
                         </th>
                         <th class="no-wrap-head">
                             Deskripsi Part
-                            <select class="sort-select" onchange="sortTable('Deskripsi Part', this.value)">
+                            <select class="sort-select" onchange="sortTableDOM('Deskripsi Part', this.value)">
                                 <option value="default">Default</option>
                                 <option value="asc">A → Z</option>
                                 <option value="desc">Z → A</option>
@@ -321,7 +320,7 @@
                         </th>
                         <th class="no-wrap-head" style="width:100px;">
                             QTY
-                            <select class="sort-select" onchange="sortTable('QTY', this.value)">
+                            <select class="sort-select" onchange="sortTableDOM('QTY', this.value)">
                                 <option value="default">Default</option>
                                 <option value="asc">Terkecil</option>
                                 <option value="desc">Terbesar</option>
@@ -329,7 +328,7 @@
                         </th>
                         <th class="no-wrap-head" style="width:100px;">
                             QTY Alloc
-                            <select class="sort-select" onchange="sortTable('QTY Alloc', this.value)">
+                            <select class="sort-select" onchange="sortTableDOM('QTY Alloc', this.value)">
                                 <option value="default">Default</option>
                                 <option value="asc">Terkecil</option>
                                 <option value="desc">Terbesar</option>
@@ -337,7 +336,7 @@
                         </th>
                         <th class="no-wrap-head" style="width:100px;">
                             Available
-                            <select class="sort-select" onchange="sortTable('Available', this.value)">
+                            <select class="sort-select" onchange="sortTableDOM('Available', this.value)">
                                 <option value="default">Default</option>
                                 <option value="asc">Terkecil</option>
                                 <option value="desc">Terbesar</option>
@@ -371,17 +370,20 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const HEADERS = ["Nomor", "Tipe Lokasi", "Nama", "Part", "Deskripsi Part", "QTY", "QTY Alloc", "Available", "Fisik", "Selisih"];
 const HEADERS_PDF = ["No", "Part", "Deskripsi Part", "QTY", "Alloc", "Available", "Fisik", "Selisih"];
 
-let allData = []; // Menyimpan data mentah asli
-let sortedData = []; // Menyimpan data yang sudah di-sort
-let filteredIndices = []; // Menyimpan index data yang sudah difilter (dari sortedData)
-let fisikMap = {}; // Key: index allData, Value: fisik
+let allData = [];
 
-// Variabel untuk menyimpan state sortir terakhir
-let currentSortCol = '';
-let currentSortDir = 'default';
+// Pemetaan nama kolom ke index <td> di tabel (supaya presisi saat sort)
+const COL_INDEX = {
+    "Tipe Lokasi": 1,
+    "Nama": 2,
+    "Part": 3,
+    "Deskripsi Part": 4,
+    "QTY": 5,
+    "QTY Alloc": 6,
+    "Available": 7
+};
 
 document.getElementById('upload').addEventListener('change', handleFile);
 
@@ -402,13 +404,12 @@ function handleFile(e) {
             return item;
         });
 
-        // Reset sort state saat upload file baru
-        currentSortCol = '';
-        currentSortDir = 'default';
+        // Reset sort dropdown
         document.querySelectorAll('.sort-select').forEach(s => s.value = 'default');
 
-        fisikMap = {};
-        applySortingAndFiltering(); // Langsung proses awal
+        populateFilters();
+        renderTable(allData);
+        updateSummary();
         enableButtons();
 
         document.getElementById('emptyState').style.display = 'none';
@@ -420,87 +421,17 @@ function handleFile(e) {
     reader.readAsArrayBuffer(file);
 }
 
-// === FUNGSI SORTIR BARU ===
-function sortTable(column, direction) {
-    currentSortCol = column;
-    currentSortDir = direction;
-    
-    // Reset semua dropdown lain kecuali yang sedang diklik
-    document.querySelectorAll('.sort-select').forEach(sel => {
-        if (sel.onchange.toString().includes(column)) {
-            sel.value = direction;
-        } else {
-            sel.value = 'default';
-        }
-    });
-
-    applySortingAndFiltering();
-}
-
-function applySortingAndFiltering() {
-    // 1. Proses Sortir berdasarkan allData
-    let dataToProcess = allData.map((item, idx) => ({ ...item, _originalIdx: idx }));
-    
-    if (currentSortCol !== '' && currentSortDir !== 'default') {
-        const isNumberCol = ['QTY', 'QTY Alloc', 'Available'].includes(currentSortCol);
-        
-        dataToProcess.sort((a, b) => {
-            let valA = a[currentSortCol] || "";
-            let valB = b[currentSortCol] || "";
-
-            if (isNumberCol) {
-                valA = parseFloat(valA) || 0;
-                valB = parseFloat(valB) || 0;
-                return currentSortDir === 'asc' ? valA - valB : valB - valA;
-            } else {
-                valA = valA.toString().toLowerCase();
-                valB = valB.toString().toLowerCase();
-                if (valA < valB) return currentSortCol === 'asc' ? -1 : 1;
-                if (valA > valB) return currentSortCol === 'asc' ? 1 : -1;
-                return 0;
-            }
-        });
-    }
-
-    sortedData = dataToProcess;
-    
-    // 2. Proses Filter (Lokasi, Nama, Pencarian) dari data yang sudah di-sort
-    const lokasi = document.getElementById("filterLokasi").value;
-    const nama = document.getElementById("filterNama").value;
-    const search = document.getElementById("searchInput").value.toLowerCase().trim();
-
-    // Update Dropdown Filter berdasarkan data yang sudah di-sort (agar urutannya ikut sort)
-    populateFilters();
-
-    filteredIndices = [];
-    sortedData.forEach((item, idx) => {
-        if (lokasi !== "ALL" && item["Tipe Lokasi"] !== lokasi) return;
-        if (nama !== "ALL" && item["Nama"] !== nama) return;
-        if (search && !(item["Deskripsi Part"] || "").toLowerCase().includes(search)
-            && !(item["Nama"] || "").toLowerCase().includes(search)
-            && !(item["Part"] || "").toLowerCase().includes(search)) return;
-        filteredIndices.push(idx);
-    });
-
-    renderTable();
-    updateSummary();
-}
-
 function populateFilters() {
     const lokasiSet = new Set();
     const namaSet = new Set();
 
-    sortedData.forEach(item => {
+    allData.forEach(item => {
         if (item["Tipe Lokasi"]) lokasiSet.add(item["Tipe Lokasi"]);
         if (item["Nama"]) namaSet.add(item["Nama"]);
     });
 
     const fLokasi = document.getElementById("filterLokasi");
     const fNama = document.getElementById("filterNama");
-
-    // Simpan nilai yang sedang aktif sebelum di-render ulang
-    const activeLokasi = fLokasi.value;
-    const activeNama = fNama.value;
 
     fLokasi.innerHTML = '<option value="ALL">Semua</option>';
     fNama.innerHTML = '<option value="ALL">Semua</option>';
@@ -511,34 +442,99 @@ function populateFilters() {
     [...namaSet].sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase())).forEach(v => {
         fNama.innerHTML += `<option value="${v}">${v}</option>`;
     });
-
-    // Kembalikan nilai yang aktif (jika masih ada di daftar)
-    if (lokasiSet.has(activeLokasi)) fLokasi.value = activeLokasi;
-    if (namaSet.has(activeNama)) fNama.value = activeNama;
 }
 
 function applyFilter() {
-    // Saat filter berubah, gunakan ulang urutan sort yang sedang aktif
-    applySortingAndFiltering();
+    const lokasi = document.getElementById("filterLokasi").value;
+    const nama = document.getElementById("filterNama").value;
+    const search = document.getElementById("searchInput").value.toLowerCase().trim();
+
+    let filtered = allData;
+
+    if (lokasi !== "ALL") filtered = filtered.filter(item => item["Tipe Lokasi"] === lokasi);
+    if (nama !== "ALL") filtered = filtered.filter(item => item["Nama"] === nama);
+    if (search) {
+        filtered = filtered.filter(item => 
+            (item["Deskripsi Part"] || "").toLowerCase().includes(search) ||
+            (item["Nama"] || "").toLowerCase().includes(search) ||
+            (item["Part"] || "").toLowerCase().includes(search)
+        );
+    }
+
+    renderTable(filtered);
+    updateSummary();
+}
+
+// === FUNGSI SORTIR LANGSUNG DI DOM (PRESISI) ===
+function sortTableDOM(column, direction) {
+    if (direction === 'default') {
+        // Jika Default, kembalikan ke urutan allData
+        const lokasi = document.getElementById("filterLokasi").value;
+        const nama = document.getElementById("filterNama").value;
+        const search = document.getElementById("searchInput").value.toLowerCase().trim();
+        
+        let filtered = allData;
+        if (lokasi !== "ALL") filtered = filtered.filter(item => item["Tipe Lokasi"] === lokasi);
+        if (nama !== "ALL") filtered = filtered.filter(item => item["Nama"] === nama);
+        if (search) {
+            filtered = filtered.filter(item => 
+                (item["Deskripsi Part"] || "").toLowerCase().includes(search) ||
+                (item["Nama"] || "").toLowerCase().includes(search) ||
+                (item["Part"] || "").toLowerCase().includes(search)
+            );
+        }
+        renderTable(filtered);
+        updateSummary();
+        return;
+    }
+
+    // Reset dropdown lain kecuali yang sedang diklik
+    document.querySelectorAll('.sort-select').forEach(sel => {
+        if (!sel.onchange.toString().includes(column)) sel.value = 'default';
+    });
+
+    const tbody = document.getElementById("tableBody");
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+    const colIdx = COL_INDEX[column];
+    const isNumberCol = ['QTY', 'QTY Alloc', 'Available'].includes(column);
+
+    rows.sort((a, b) => {
+        let valA = a.cells[colIdx] ? a.cells[colIdx].innerText.trim() : "";
+        let valB = b.cells[colIdx] ? b.cells[colIdx].innerText.trim() : "";
+
+        if (isNumberCol) {
+            valA = parseFloat(valA) || 0;
+            valB = parseFloat(valB) || 0;
+            return direction === 'asc' ? valA - valB : valB - valA;
+        } else {
+            return direction === 'asc' 
+                ? valA.localeCompare(valB, 'id', { sensitivity: 'base' }) 
+                : valB.localeCompare(valA, 'id', { sensitivity: 'base' });
+        }
+    });
+
+    // Pasang ulang posisi baris di HTML (ini membuat input fisik ikut pindah)
+    rows.forEach(row => tbody.appendChild(row));
+
+    // Perbaiki warna selang-seling (zebra strip)
+    rows.forEach((row, index) => {
+        row.style.background = (index % 2 === 0) ? '' : '#f8fafc';
+    });
+
+    updateSummary();
 }
 
 function getAvail(item) {
     return (parseFloat(item["QTY"]) || 0) - (parseFloat(item["QTY Alloc"]) || 0);
 }
 
-function renderTable() {
+function renderTable(dataToRender) {
     const tbody = document.getElementById("tableBody");
     tbody.innerHTML = "";
 
-    filteredIndices.forEach(idx => {
-        const item = sortedData[idx]; // AMBIL DARI sortedData
-        const origIdx = item._originalIdx; // Index asli untuk ambil fisikMap
+    dataToRender.forEach(item => {
         const avail = getAvail(item);
-        const fisik = fisikMap[origIdx] !== undefined && fisikMap[origIdx] !== '' ? fisikMap[origIdx] : '';
-        const minus = fisik !== '' ? fisik - avail : null;
-
         const tr = document.createElement("tr");
-        if (minus !== null && minus < 0) tr.className = "row-minus";
 
         tr.appendChild(makeTD(item["Nomor"] || "", "center no-wrap"));
         tr.appendChild(makeTD(item["Tipe Lokasi"] || "", "no-wrap"));
@@ -549,32 +545,21 @@ function renderTable() {
         tr.appendChild(makeTD(parseFloat(item["QTY Alloc"]) || 0, "num"));
         tr.appendChild(makeTD(avail, "num"));
 
+        // Kolom Fisik
         const tdFisik = document.createElement("td");
         tdFisik.className = "center";
         const input = document.createElement("input");
         input.type = "number";
         input.className = "fisik-input";
-        input.value = fisik;
         input.min = "0";
-        input.dataset.idx = origIdx; // Simpan original index
         input.addEventListener("input", onFisikInput);
         input.addEventListener("keydown", onFisikKeydown);
         tdFisik.appendChild(input);
         tr.appendChild(tdFisik);
 
+        // Kolom Selisih
         const tdMinus = document.createElement("td");
         tdMinus.className = "num center";
-        tdMinus.id = "minus-" + origIdx;
-
-        if (minus === null) {
-            tdMinus.innerHTML = '';
-        } else if (minus < 0) {
-            tdMinus.innerHTML = `<span class="minus-neg">${minus}</span>`;
-        } else if (minus === 0) {
-            tdMinus.innerHTML = `<span class="minus-zero">0</span>`;
-        } else {
-            tdMinus.innerHTML = `<span class="minus-pos">+${minus}</span>`;
-        }
         tr.appendChild(tdMinus);
 
         tbody.appendChild(tr);
@@ -589,24 +574,23 @@ function makeTD(value, cls) {
 }
 
 function onFisikInput(e) {
-    const idx = parseInt(e.target.dataset.idx); // Ambil original index
-    const val = e.target.value.trim();
-    fisikMap[idx] = val === '' ? '' : parseFloat(val);
-
-    const item = allData[idx]; // Cari di allData berdasarkan index asli
-    const avail = getAvail(item);
-    const fisik = fisikMap[idx];
+    const fisikVal = e.target.value.trim();
+    const fisik = fisikVal === '' ? '' : parseFloat(fisikVal);
+    const tr = e.target.closest("tr");
+    const cells = tr.querySelectorAll("td");
+    
+    // Hitung available dari teks di kolom QTY dan Alloc
+    const qty = parseFloat(cells[5].innerText) || 0;
+    const alloc = parseFloat(cells[6].innerText) || 0;
+    const avail = qty - alloc;
     const minus = fisik !== '' ? fisik - avail : null;
 
-    const tdMinus = document.getElementById("minus-" + idx);
-    if (tdMinus) {
-        if (minus === null) tdMinus.innerHTML = '';
-        else if (minus < 0) tdMinus.innerHTML = `<span class="minus-neg">${minus}</span>`;
-        else if (minus === 0) tdMinus.innerHTML = `<span class="minus-zero">0</span>`;
-        else tdMinus.innerHTML = `<span class="minus-pos">+${minus}</span>`;
-    }
+    const tdMinus = cells[9]; // Index kolom selisih
+    if (minus === null) tdMinus.innerHTML = '';
+    else if (minus < 0) tdMinus.innerHTML = `<span class="minus-neg">${minus}</span>`;
+    else if (minus === 0) tdMinus.innerHTML = `<span class="minus-zero">0</span>`;
+    else tdMinus.innerHTML = `<span class="minus-pos">+${minus}</span>`;
 
-    const tr = e.target.closest("tr");
     if (minus !== null && minus < 0) tr.classList.add("row-minus");
     else tr.classList.remove("row-minus");
 
@@ -631,15 +615,17 @@ function onFisikKeydown(e) {
 }
 
 function updateSummary() {
-    const total = filteredIndices.length;
+    const rows = document.querySelectorAll("#tableBody tr");
+    const total = rows.length;
     let filled = 0, minusCount = 0;
 
-    filteredIndices.forEach(idx => {
-        const origIdx = sortedData[idx]._originalIdx;
-        const f = fisikMap[origIdx];
-        if (f !== '' && f !== undefined) {
+    rows.forEach(tr => {
+        const fisikVal = tr.querySelector(".fisik-input").value.trim();
+        if (fisikVal !== '') {
             filled++;
-            if (f - getAvail(sortedData[idx]) < 0) minusCount++;
+            const qty = parseFloat(tr.querySelectorAll("td")[5].innerText) || 0;
+            const alloc = parseFloat(tr.querySelectorAll("td")[6].innerText) || 0;
+            if ((parseFloat(fisikVal) - (qty - alloc)) < 0) minusCount++;
         }
     });
 
@@ -650,21 +636,38 @@ function updateSummary() {
 }
 
 function updateFooter() {
+    const rows = document.querySelectorAll("#tableBody tr");
     let tQty = 0, tAlloc = 0, tAvail = 0, tFisik = 0, tMinus = 0, hasFisik = false;
 
-    filteredIndices.forEach(idx => {
-        const item = sortedData[idx];
-        const origIdx = item._originalIdx;
-        tQty += parseFloat(item["QTY"]) || 0;
-        tAlloc += parseFloat(item["QTY Alloc"]) || 0;
-        tAvail += getAvail(item);
-        const f = fisikMap[origIdx];
-        if (f !== '' && f !== undefined) {
+    rows.forEach(tr => {
+        const cells = tr.querySelectorAll("td");
+        tQty += parseFloat(cells[5].innerText) || 0;
+        tAlloc += parseFloat(cells[6].innerText) || 0;
+        tAvail += parseFloat(cells[7].innerText) || 0;
+        
+        const fisikVal = tr.querySelector(".fisik-input").value.trim();
+        if (fisikVal !== '') {
+            const f = parseFloat(fisikVal);
             tFisik += f;
-            tMinus += f - getAvail(item);
+            tMinus += (f - tAvail); // Total minus per baris
             hasFisik = true;
         }
     });
+
+    // Hitung total minus keseluruhan secara akurat
+    if (hasFisik) {
+        tMinus = 0;
+        rows.forEach(tr => {
+            const cells = tr.querySelectorAll("td");
+            const qty = parseFloat(cells[5].innerText) || 0;
+            const alloc = parseFloat(cells[6].innerText) || 0;
+            const avail = qty - alloc;
+            const fisikVal = tr.querySelector(".fisik-input").value.trim();
+            if (fisikVal !== '') {
+                tMinus += (parseFloat(fisikVal) - avail);
+            }
+        });
+    }
 
     document.getElementById("footQty").textContent = tQty;
     document.getElementById("footAlloc").textContent = tAlloc;
@@ -674,16 +677,18 @@ function updateFooter() {
 }
 
 function clearAllFisik() {
-    fisikMap = {};
-    renderTable();
+    document.querySelectorAll(".fisik-input").forEach(input => input.value = "");
+    document.querySelectorAll("#tableBody tr").forEach(tr => {
+        tr.querySelector("td.num.center").innerHTML = '';
+        tr.classList.remove("row-minus");
+    });
     updateSummary();
     updateFooter();
     showToast("Semua input Fisik telah direset");
 }
 
 function deleteAll() {
-    allData = []; sortedData = []; filteredIndices = []; fisikMap = {};
-    currentSortCol = ''; currentSortDir = 'default';
+    allData = [];
     document.getElementById("tableBody").innerHTML = "";
     document.getElementById("emptyState").style.display = '';
     document.getElementById("summary").style.display = 'none';
@@ -707,27 +712,50 @@ function enableButtons() {
     document.getElementById("btnPDF").disabled = false;
 }
 
-function downloadExcel() {
-    const rows = [];
-    filteredIndices.forEach(idx => {
-        const item = sortedData[idx];
-        const avail = getAvail(item);
-        const fisik = fisikMap[item._originalIdx];
-        const isFilled = fisik !== '' && fisik !== undefined;
-        rows.push({
-            "Nomor": item["Nomor"] || "", "Tipe Lokasi": item["Tipe Lokasi"] || "",
-            "Nama": item["Nama"] || "", "Part": item["Part"] || "",
-            "Deskripsi Part": item["Deskripsi Part"] || "",
-            "QTY": parseFloat(item["QTY"]) || 0, "QTY Alloc": parseFloat(item["QTY Alloc"]) || 0,
-            "Available QTY": avail, "Fisik": isFilled ? fisik : "", "Minus": isFilled ? (fisik - avail) : ""
+function getDataFromDOM() {
+    // Fungsi untuk membaca apa pun yang tertampil di layar saat ini 
+    // (sudah termasuk hasil filter dan sortiran)
+    const rows = document.querySelectorAll("#tableBody tr");
+    const result = [];
+    rows.forEach(tr => {
+        const cells = tr.querySelectorAll("td");
+        const fisikVal = tr.querySelector(".fisik-input").value.trim();
+        const isFilled = fisikVal !== '';
+        const qty = parseFloat(cells[5].innerText) || 0;
+        const alloc = parseFloat(cells[6].innerText) || 0;
+        const avail = qty - alloc;
+        
+        result.push({
+            nomor: cells[0].innerText,
+            tipeLokasi: cells[1].innerText,
+            nama: cells[2].innerText,
+            part: cells[3].innerText,
+            deskripsi: cells[4].innerText,
+            qty: qty,
+            alloc: alloc,
+            avail: avail,
+            fisik: isFilled ? parseFloat(fisikVal) : "",
+            minus: isFilled ? (parseFloat(fisikVal) - avail) : ""
         });
     });
+    return result;
+}
+
+function downloadExcel() {
+    const data = getDataFromDOM();
+    const rows = data.map(d => ({
+        "Nomor": d.nomor, "Tipe Lokasi": d.tipeLokasi, "Nama": d.nama,
+        "Part": d.part, "Deskripsi Part": d.deskripsi, "QTY": d.qty,
+        "QTY Alloc": d.alloc, "Available QTY": d.avail, "Fisik": d.fisik, "Minus": d.minus
+    }));
+
     let tQty = 0, tAlloc = 0, tAvail = 0, tFisik = 0, tMinus = 0, hasFisik = false;
-    rows.forEach(r => {
-        tQty += r["QTY"] || 0; tAlloc += r["QTY Alloc"] || 0; tAvail += r["Available QTY"] || 0;
-        if (r["Fisik"] !== "") { tFisik += r["Fisik"] || 0; tMinus += r["Minus"] || 0; hasFisik = true; }
+    data.forEach(d => {
+        tQty += d.qty; tAlloc += d.alloc; tAvail += d.avail;
+        if (d.fisik !== "") { tFisik += d.fisik; tMinus += d.minus; hasFisik = true; }
     });
     rows.push({"Nomor":"","Tipe Lokasi":"","Nama":"","Part":"","Deskripsi Part":"TOTAL","QTY":tQty,"QTY Alloc":tAlloc,"Available QTY":tAvail,"Fisik":hasFisik?tFisik:"","Minus":hasFisik?tMinus:""});
+
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Stock Opname");
@@ -739,20 +767,19 @@ function downloadExcel() {
 function downloadPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', format: 'a4', unit: 'mm' });
-    const rows = [];
-    filteredIndices.forEach((idx, loopIndex) => {
-        const item = sortedData[idx];
-        const avail = getAvail(item);
-        const fisik = fisikMap[item._originalIdx];
-        const isFilled = fisik !== '' && fisik !== undefined;
-        rows.push([loopIndex + 1, item["Part"] || "", item["Deskripsi Part"] || "", parseFloat(item["QTY"]) || 0, parseFloat(item["QTY Alloc"]) || 0, avail, isFilled ? fisik : "", isFilled ? (fisik - avail) : ""]);
-    });
+    
+    const data = getDataFromDOM();
+    const rows = data.map((d, i) => [
+        i + 1, d.part, d.deskripsi, d.qty, d.alloc, d.avail, d.fisik, d.minus
+    ]);
+
     let tQty = 0, tAlloc = 0, tAvail = 0, tFisik = 0, tMinus = 0, hasFisik = false;
-    rows.forEach(r => {
-        tQty += (typeof r[3] === 'number' ? r[3] : 0); tAlloc += (typeof r[4] === 'number' ? r[4] : 0); tAvail += (typeof r[5] === 'number' ? r[5] : 0);
-        if (r[6] !== "") { tFisik += r[6] || 0; tMinus += r[7] || 0; hasFisik = true; }
+    data.forEach(d => {
+        tQty += d.qty; tAlloc += d.alloc; tAvail += d.avail;
+        if (d.fisik !== "") { tFisik += d.fisik; tMinus += d.minus; hasFisik = true; }
     });
     rows.push(["","","TOTAL", tQty, tAlloc, tAvail, hasFisik ? tFisik : "", hasFisik ? tMinus : ""]);
+
     doc.setFontSize(14); doc.text("DATA STOCK KOMPONEN (OPNAME)", 14, 15);
     const lokasi = document.getElementById("filterLokasi").value;
     const nama = document.getElementById("filterNama").value;
@@ -761,6 +788,7 @@ function downloadPDF() {
         if (lokasi !== "ALL") ft += "Lokasi=" + lokasi + " "; if (nama !== "ALL") ft += "Nama=" + nama;
         doc.text(ft, 14, 20);
     }
+
     doc.autoTable({
         head: [HEADERS_PDF], body: rows, startY: 23, margin: { left: 14, right: 14 }, tableWidth: 'exact',
         styles: { fontSize: 7, cellPadding: 1.5, overflow: 'ellipsize', lineColor: [0, 0, 0], lineWidth: 0.1, minCellHeight: 5 },
