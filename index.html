@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Komponen (Manual Opname)</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #f4f6f9;
+            --card: #ffffff;
+            --border: #d1d5db;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --danger: #dc2626;
+            --danger-bg: #fef2f2;
+            --success: #16a34a;
+            --success-bg: #f0fdf4;
+            --warn: #d97706;
+            --warn-bg: #fffbeb;
+            --header-bg: #1e293b;
+            --header-text: #f8fafc;
+            --row-alt: #f8fafc;
+            --input-focus: #3b82f6;
+            --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+            --shadow-lg: 0 4px 12px rgba(0,0,0,.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.5;
+            padding: 24px; min-height: 100vh;
+        }
+
+        .container { max-width: 100%; margin: 0 auto; } /* Diubah ke 100% agar bisa scroll jauh */
+
+        .page-header { text-align: center; margin-bottom: 24px; }
+        .page-header h2 { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; color: var(--header-bg); }
+        .page-header p { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+        .toolbar {
+            display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+            background: var(--card); padding: 16px 20px; border-radius: 10px;
+            border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 16px;
+        }
+
+        .toolbar-group { display: flex; align-items: center; gap: 8px; }
+        .toolbar-group label {
+            font-size: 12px; font-weight: 600; color: var(--muted);
+            text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap;
+        }
+
+        .file-label {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--accent); color: #fff; padding: 8px 16px;
+            border-radius: 6px; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: background 0.15s; border: none;
+        }
+        .file-label:hover { background: var(--accent-hover); }
+        .file-label svg { width: 16px; height: 16px; }
+        #upload { display: none; }
+
+        select {
+            padding: 7px 12px; border: 1px solid var(--border); border-radius: 6px;
+            font-size: 13px; background: #fff; color: var(--text);
+            cursor: pointer; min-width: 160px; transition: border-color 0.15s;
+        }
+        select:focus { outline: none; border-color: var(--input-focus); }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border: 1px solid var(--border); border-radius: 6px;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            background: #fff; color: var(--text); transition: all 0.15s; white-space: nowrap;
+        }
+        .btn:hover { background: var(--bg); border-color: #9ca3af; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn svg { width: 15px; height: 15px; }
+        .btn-accent { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .btn-accent:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+        .spacer { flex: 1; }
+
+        .search-wrap { position: relative; }
+        .search-wrap svg {
+            position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+            width: 15px; height: 15px; color: var(--muted); pointer-events: none;
+        }
+        .search-wrap input {
+            padding: 7px 12px 7px 32px; border: 1px solid var(--border);
+            border-radius: 6px; font-size: 13px; width: 220px; transition: border-color 0.15s;
+        }
+        .search-wrap input:focus { outline: none; border-color: var(--input-focus); }
+
+        .summary {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px; margin-bottom: 16px;
+        }
+        .summary-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 10px; padding: 14px 18px; box-shadow: var(--shadow);
+        }
+        .summary-card .label {
+            font-size: 11px; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.4px; color: var(--muted); margin-bottom: 4px;
+        }
+        .summary-card .value { font-size: 24px; font-weight: 700; color: var(--text); }
+        .summary-card.danger .value { color: var(--danger); }
+        .summary-card.success .value { color: var(--success); }
+        .summary-card.warn .value { color: var(--warn); }
+
+        .table-wrap {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 10px; box-shadow: var(--shadow); overflow: hidden;
+        }
+        
+        .table-scroll { 
+            overflow-x: auto; 
+            max-height: 65vh; 
+            overflow-y: auto; 
+        }
+
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            /* Diubah: min-width dihapus agar tabel bisa menyesuaikan panjang teks */
+        }
+        
+        thead { position: sticky; top: 0; z-index: 2; }
+
+        th {
+            background: var(--header-bg); color: var(--header-text);
+            padding: 10px 12px; font-size: 12px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.3px;
+            text-align: center; white-space: nowrap; border-bottom: 2px solid #0f172a;
+        }
+
+        td {
+            padding: 6px 12px; font-size: 13px; border-bottom: 1px solid #e5e7eb;
+            height: 38px; vertical-align: middle;
+        }
+        
+        /* CLASS BARU: Mencegah teks turun ke bawah, memaksa memanjang ke samping */
+        .no-wrap {
+            white-space: nowrap;
+        }
+
+        tbody tr:nth-child(even) { background: var(--row-alt); }
+        tbody tr:hover { background: #eff6ff; }
+        td.num { text-align: right; font-variant-numeric: tabular-nums; }
+        td.center { text-align: center; }
+
+        .fisik-input {
+            width: 70px; padding: 4px 8px; border: 1px solid var(--border);
+            border-radius: 4px; font-size: 13px; text-align: right;
+            font-variant-numeric: tabular-nums; background: #fff;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .fisik-input:focus {
+            outline: none; border-color: var(--input-focus);
+            box-shadow: 0 0 0 2px rgba(59,130,246,.2);
+        }
+
+        .minus-neg {
+            color: var(--danger); font-weight: 700; background: var(--danger-bg);
+            border-radius: 4px; padding: 2px 6px; display: inline-block;
+            min-width: 40px; text-align: center;
+        }
+        .minus-zero { color: var(--muted); }
+        .minus-pos { color: var(--success); font-weight: 600; }
+
+        tr.row-minus { background: var(--danger-bg) !important; }
+        tr.row-minus:hover { background: #fee2e2 !important; }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+        .empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.4; }
+        .empty-state p { font-size: 14px; }
+
+        .toast {
+            position: fixed; bottom: 24px; right: 24px; background: var(--header-bg);
+            color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 13px;
+            font-weight: 500; box-shadow: var(--shadow-lg); transform: translateY(80px);
+            opacity: 0; transition: all 0.3s ease; z-index: 999;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+
+        tfoot td {
+            background: #f1f5f9; font-weight: 700;
+            border-top: 2px solid var(--border); position: sticky; bottom: 0;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .toolbar { padding: 12px; }
+            .search-wrap input { width: 160px; }
+            select { min-width: 120px; }
+            .summary { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="page-header">
+        <h2>DATA STOCK KOMPONEN (OPNAME)</h2>
+        <p>Upload file Excel, isi kolom Fisik, lalu export hasilnya</p>
+    </div>
+
+    <div class="toolbar">
+        <label class="file-label" for="upload">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload File
+        </label>
+        <input type="file" id="upload" accept=".xlsx, .xls, .csv">
+
+        <div class="toolbar-group">
+            <label>Lokasi</label>
+            <select id="filterLokasi" onchange="applyFilter()">
+                <option value="ALL">Semua</option>
+            </select>
+        </div>
+
+        <div class="toolbar-group">
+            <label>Nama</label>
+            <select id="filterNama" onchange="applyFilter()">
+                <option value="ALL">Semua</option>
+            </select>
+        </div>
+
+        <div class="search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="searchInput" placeholder="Cari deskripsi part..." oninput="applyFilter()">
+        </div>
+
+        <div class="spacer"></div>
+
+        <button class="btn" id="btnClearFisik" onclick="clearAllFisik()" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Reset Fisik
+        </button>
+        <button class="btn btn-accent" id="btnExcel" onclick="downloadExcel()" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Excel
+        </button>
+        <button class="btn btn-accent" id="btnPDF" onclick="downloadPDF()" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            PDF
+        </button>
+    </div>
+
+    <div class="summary" id="summary" style="display:none;">
+        <div class="summary-card">
+            <div class="label">Total Item</div>
+            <div class="value" id="sumTotal">0</div>
+        </div>
+        <div class="summary-card success">
+            <div class="label">Sudah Diopname</div>
+            <div class="value" id="sumFilled">0</div>
+        </div>
+        <div class="summary-card warn">
+            <div class="label">Belum Diopname</div>
+            <div class="value" id="sumEmpty">0</div>
+        </div>
+        <div class="summary-card danger">
+            <div class="label">Ada Selisih (Minus)</div>
+            <div class="value" id="sumMinus">0</div>
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <div class="table-scroll">
+            <table id="table">
+                <thead>
+                    <tr>
+                        <th style="width:50px;">No</th>
+                        <th>Tipe Lokasi</th>
+                        <th>Nama</th>
+                        <th>Part</th>
+                        <th>Deskripsi Part</th>
+                        <th style="width:70px;">QTY</th>
+                        <th style="width:75px;">QTY Alloc</th>
+                        <th style="width:85px;">Available</th>
+                        <th style="width:85px;">Fisik</th>
+                        <th style="width:75px;">Selisih</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+                <tfoot id="tableFoot" style="display:none;">
+                    <tr>
+                        <td class="center no-wrap" colspan="5">TOTAL</td>
+                        <td class="num" id="footQty">0</td>
+                        <td class="num" id="footAlloc">0</td>
+                        <td class="num" id="footAvail">0</td>
+                        <td class="num" id="footFisik"></td>
+                        <td class="num" id="footMinus"></td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="empty-state" id="emptyState">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <p>Upload file Excel (.xlsx / .xls / .csv) untuk memulai opname</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const HEADERS = [
+    "Nomor", "Tipe Lokasi", "Nama", "Part", "Deskripsi Part",
+    "QTY", "QTY Alloc", "Available", "Fisik", "Selisih"
+];
+
+const HEADERS_PDF = [
+    "No", "Part", "Deskripsi Part",
+    "QTY", "Alloc", "Available", "Fisik", "Selisih"
+];
+
+let allData = [];
+let filteredIndices = [];
+let fisikMap = {};
+
+document.getElementById('upload').addEventListener('change', handleFile);
+
+function handleFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        let rawData = XLSX.utils.sheet_to_json(sheet);
+
+        allData = rawData.map(item => {
+            if (item["No."] && !item["Nomor"]) item["Nomor"] = item["No."];
+            if (item["Nama Part"] && !item["Nama"]) item["Nama"] = item["Nama Part"];
+            return item;
+        });
+
+        fisikMap = {};
+        populateFilters();
+        applyFilter();
+        enableButtons();
+
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('summary').style.display = 'grid';
+        document.getElementById('tableFoot').style.display = '';
+
+        showToast('File berhasil dimuat: ' + file.name);
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function populateFilters() {
+    const lokasiSet = new Set();
+    const namaSet = new Set();
+
+    allData.forEach(item => {
+        if (item["Tipe Lokasi"]) lokasiSet.add(item["Tipe Lokasi"]);
+        if (item["Nama"]) namaSet.add(item["Nama"]);
+    });
+
+    const fLokasi = document.getElementById("filterLokasi");
+    const fNama = document.getElementById("filterNama");
+
+    fLokasi.innerHTML = '<option value="ALL">Semua</option>';
+    fNama.innerHTML = '<option value="ALL">Semua</option>';
+
+    [...lokasiSet].sort().forEach(v => {
+        fLokasi.innerHTML += `<option value="${v}">${v}</option>`;
+    });
+    [...namaSet].sort().forEach(v => {
+        fNama.innerHTML += `<option value="${v}">${v}</option>`;
+    });
+}
+
+function applyFilter() {
+    const lokasi = document.getElementById("filterLokasi").value;
+    const nama = document.getElementById("filterNama").value;
+    const search = document.getElementById("searchInput").value.toLowerCase().trim();
+
+    filteredIndices = [];
+
+    allData.forEach((item, idx) => {
+        if (lokasi !== "ALL" && item["Tipe Lokasi"] !== lokasi) return;
+        if (nama !== "ALL" && item["Nama"] !== nama) return;
+        if (search && !(item["Deskripsi Part"] || "").toLowerCase().includes(search)
+            && !(item["Nama"] || "").toLowerCase().includes(search)
+            && !(item["Part"] || "").toLowerCase().includes(search)) return;
+        filteredIndices.push(idx);
+    });
+
+    renderTable();
+    updateSummary();
+}
+
+function getAvail(item) {
+    return (parseFloat(item["QTY"]) || 0) - (parseFloat(item["QTY Alloc"]) || 0);
+}
+
+function renderTable() {
+    const tbody = document.getElementById("tableBody");
+    tbody.innerHTML = "";
+
+    filteredIndices.forEach(idx => {
+        const item = allData[idx];
+        const avail = getAvail(item);
+        const fisik = fisikMap[idx] !== undefined && fisikMap[idx] !== '' ? fisikMap[idx] : '';
+        const minus = fisik !== '' ? fisik - avail : null;
+
+        const tr = document.createElement("tr");
+        if (minus !== null && minus < 0) tr.className = "row-minus";
+
+        tr.appendChild(makeTD(item["Nomor"] || "", "center no-wrap")); // Ditambah no-wrap
+        tr.appendChild(makeTD(item["Tipe Lokasi"] || "", "no-wrap"));   // Ditambah no-wrap
+        tr.appendChild(makeTD(item["Nama"] || "", "no-wrap"));          // Ditambah no-wrap
+        tr.appendChild(makeTD(item["Part"] || "", "no-wrap"));          // Ditambah no-wrap
+        tr.appendChild(makeTD(item["Deskripsi Part"] || "", "no-wrap"));// Ditambah no-wrap
+        tr.appendChild(makeTD(parseFloat(item["QTY"]) || 0, "num"));
+        tr.appendChild(makeTD(parseFloat(item["QTY Alloc"]) || 0, "num"));
+        tr.appendChild(makeTD(avail, "num"));
+
+        const tdFisik = document.createElement("td");
+        tdFisik.className = "center";
+        const input = document.createElement("input");
+        input.type = "number";
+        input.className = "fisik-input";
+        input.value = fisik;
+        input.min = "0";
+        input.dataset.idx = idx;
+        input.addEventListener("input", onFisikInput);
+        input.addEventListener("keydown", onFisikKeydown);
+        tdFisik.appendChild(input);
+        tr.appendChild(tdFisik);
+
+        const tdMinus = document.createElement("td");
+        tdMinus.className = "num center";
+        tdMinus.id = "minus-" + idx;
+
+        if (minus === null) {
+            tdMinus.innerHTML = '';
+        } else if (minus < 0) {
+            tdMinus.innerHTML = `<span class="minus-neg">${minus}</span>`;
+        } else if (minus === 0) {
+            tdMinus.innerHTML = `<span class="minus-zero">0</span>`;
+        } else {
+            tdMinus.innerHTML = `<span class="minus-pos">+${minus}</span>`;
+        }
+        tr.appendChild(tdMinus);
+
+        tbody.appendChild(tr);
+    });
+}
+
+function makeTD(value, cls) {
+    const td = document.createElement("td");
+    if (cls) td.className = cls;
+    td.textContent = value;
+    return td;
+}
+
+function onFisikInput(e) {
+    const idx = parseInt(e.target.dataset.idx);
+    const val = e.target.value.trim();
+    fisikMap[idx] = val === '' ? '' : parseFloat(val);
+
+    const avail = getAvail(allData[idx]);
+    const fisik = fisikMap[idx];
+    const minus = fisik !== '' ? fisik - avail : null;
+
+    const tdMinus = document.getElementById("minus-" + idx);
+    if (tdMinus) {
+        if (minus === null) {
+            tdMinus.innerHTML = '';
+        } else if (minus < 0) {
+            tdMinus.innerHTML = `<span class="minus-neg">${minus}</span>`;
+        } else if (minus === 0) {
+            tdMinus.innerHTML = `<span class="minus-zero">0</span>`;
+        } else {
+            tdMinus.innerHTML = `<span class="minus-pos">+${minus}</span>`;
+        }
+    }
+
+    const tr = e.target.closest("tr");
+    if (minus !== null && minus < 0) {
+        tr.classList.add("row-minus");
+    } else {
+        tr.classList.remove("row-minus");
+    }
+
+    updateSummary();
+    updateFooter();
+}
+
+function onFisikKeydown(e) {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        const arr = Array.from(document.querySelectorAll(".fisik-input"));
+        const ci = arr.indexOf(e.target);
+        const ni = e.key === "ArrowDown" ? ci + 1 : ci - 1;
+        if (ni >= 0 && ni < arr.length) { arr[ni].focus(); arr[ni].select(); }
+    }
+    if (e.key === "Enter") {
+        e.preventDefault();
+        const arr = Array.from(document.querySelectorAll(".fisik-input"));
+        const ci = arr.indexOf(e.target);
+        if (ci + 1 < arr.length) { arr[ci + 1].focus(); arr[ci + 1].select(); }
+    }
+}
+
+function updateSummary() {
+    const total = filteredIndices.length;
+    let filled = 0, minusCount = 0;
+
+    filteredIndices.forEach(idx => {
+        const f = fisikMap[idx];
+        if (f !== '' && f !== undefined) {
+            filled++;
+            if (f - getAvail(allData[idx]) < 0) minusCount++;
+        }
+    });
+
+    document.getElementById("sumTotal").textContent = total;
+    document.getElementById("sumFilled").textContent = filled;
+    document.getElementById("sumEmpty").textContent = total - filled;
+    document.getElementById("sumMinus").textContent = minusCount;
+}
+
+function updateFooter() {
+    let tQty = 0, tAlloc = 0, tAvail = 0, tFisik = 0, tMinus = 0, hasFisik = false;
+
+    filteredIndices.forEach(idx => {
+        const item = allData[idx];
+        tQty += parseFloat(item["QTY"]) || 0;
+        tAlloc += parseFloat(item["QTY Alloc"]) || 0;
+        tAvail += getAvail(item);
+        const f = fisikMap[idx];
+        if (f !== '' && f !== undefined) {
+            tFisik += f;
+            tMinus += f - getAvail(item);
+            hasFisik = true;
+        }
+    });
+
+    document.getElementById("footQty").textContent = tQty;
+    document.getElementById("footAlloc").textContent = tAlloc;
+    document.getElementById("footAvail").textContent = tAvail;
+    document.getElementById("footFisik").textContent = hasFisik ? tFisik : '';
+    document.getElementById("footMinus").textContent = hasFisik ? tMinus : '';
+}
+
+function clearAllFisik() {
+    fisikMap = {};
+    renderTable();
+    updateSummary();
+    updateFooter();
+    showToast("Semua input Fisik telah direset");
+}
+
+function enableButtons() {
+    document.getElementById("btnExcel").disabled = false;
+    document.getElementById("btnPDF").disabled = false;
+    document.getElementById("btnClearFisik").disabled = false;
+}
+
+function downloadExcel() {
+    const rows = [];
+
+    filteredIndices.forEach(idx => {
+        const item = allData[idx];
+        const avail = getAvail(item);
+        const fisik = fisikMap[idx];
+        const isFilled = fisik !== '' && fisik !== undefined;
+
+        rows.push({
+            "Nomor": item["Nomor"] || "",
+            "Tipe Lokasi": item["Tipe Lokasi"] || "",
+            "Nama": item["Nama"] || "",
+            "Part": item["Part"] || "",
+            "Deskripsi Part": item["Deskripsi Part"] || "",
+            "QTY": parseFloat(item["QTY"]) || 0,
+            "QTY Alloc": parseFloat(item["QTY Alloc"]) || 0,
+            "Available QTY": avail,
+            "Fisik": isFilled ? fisik : "",
+            "Minus": isFilled ? (fisik - avail) : ""
+        });
+    });
+
+    let tQty = 0, tAlloc = 0, tAvail = 0, tFisik = 0, tMinus = 0, hasFisik = false;
+    rows.forEach(r => {
+        tQty += r["QTY"] || 0;
+        tAlloc += r["QTY Alloc"] || 0;
+        tAvail += r["Available QTY"] || 0;
+        if (r["Fisik"] !== "") {
+            tFisik += r["Fisik"] || 0;
+            tMinus += r["Minus"] || 0;
+            hasFisik = true;
+        }
+    });
+    rows.push({
+        "Nomor": "", "Tipe Lokasi": "", "Nama": "", "Part": "",
+        "Deskripsi Part": "TOTAL", "QTY": tQty, "QTY Alloc": tAlloc,
+        "Available QTY": tAvail, "Fisik": hasFisik ? tFisik : "", "Minus": hasFisik ? tMinus : ""
+    });
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Stock Opname");
+    ws["!cols"] = [
+        {wch:6},{wch:16},{wch:18},{wch:14},{wch:40},
+        {wch:8},{wch:10},{wch:12},{wch:10},{wch:10}
+    ];
+    XLSX.writeFile(wb, "stock_opname.xlsx");
+    showToast("Excel berhasil diunduh");
+}
+
+function downloadPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ 
+        orientation: 'portrait', 
+        format: 'a4',
+        unit: 'mm'
+    });
+
+    const rows = [];
+    
+    filteredIndices.forEach((idx, loopIndex) => {
+        const item = allData[idx];
+        const avail = getAvail(item);
+        const fisik = fisikMap[idx];
+        const isFilled = fisik !== '' && fisik !== undefined;
+
+        rows.push([
+            loopIndex + 1, 
+            item["Part"] || "",
+            item["Deskripsi Part"] || "",
+            parseFloat(item["QTY"]) || 0,
+            parseFloat(item["QTY Alloc"]) || 0,
+            avail,
+            isFilled ? fisik : "",
+            isFilled ? (fisik - avail) : ""
+        ]);
+    });
+
+    let tQty = 0, tAlloc = 0, tAvail = 0, tFisik = 0, tMinus = 0, hasFisik = false;
+    rows.forEach(r => {
+        tQty += (typeof r[3] === 'number' ? r[3] : 0);
+        tAlloc += (typeof r[4] === 'number' ? r[4] : 0);
+        tAvail += (typeof r[5] === 'number' ? r[5] : 0);
+        if (r[6] !== "") {
+            tFisik += r[6] || 0;
+            tMinus += r[7] || 0;
+            hasFisik = true;
+        }
+    });
+    rows.push(["","","TOTAL", tQty, tAlloc, tAvail, hasFisik ? tFisik : "", hasFisik ? tMinus : ""]);
+
+    doc.setFontSize(14);
+    doc.text("DATA STOCK KOMPONEN (OPNAME)", 14, 15);
+
+    const lokasi = document.getElementById("filterLokasi").value;
+    const nama = document.getElementById("filterNama").value;
+    if (lokasi !== "ALL" || nama !== "ALL") {
+        doc.setFontSize(8);
+        doc.setTextColor(100);
+        let ft = "Filter: ";
+        if (lokasi !== "ALL") ft += "Lokasi=" + lokasi + " ";
+        if (nama !== "ALL") ft += "Nama=" + nama;
+        doc.text(ft, 14, 20);
+    }
+
+    doc.autoTable({
+        head: [HEADERS_PDF],
+        body: rows,
+        startY: 23,
+        margin: { left: 14, right: 14 }, 
+        tableWidth: 'exact', 
+        styles: { 
+            fontSize: 7,
+            cellPadding: 1.5,
+            overflow: 'ellipsize', 
+            lineColor: [0, 0, 0], 
+            lineWidth: 0.1,
+            minCellHeight: 5
+        },
+        headStyles: { 
+            fillColor: [30, 41, 59], 
+            textColor: 255, 
+            fontStyle: 'bold',
+            fontSize: 7.5,
+            minCellHeight: 6
+        },
+        columnStyles: {
+            0: { halign: 'center', cellWidth: 'wrap' },  
+            1: { halign: 'left',   cellWidth: 'wrap' },  
+            2: { halign: 'left',   cellWidth: 'wrap' },  
+            3: { halign: 'right',  cellWidth: 'wrap' },  
+            4: { halign: 'right',  cellWidth: 'wrap' },  
+            5: { halign: 'right',  cellWidth: 'wrap' },  
+            6: { halign: 'right',  cellWidth: 'wrap' },  
+            7: { halign: 'right',  cellWidth: 'wrap' },  
+        },
+        didParseCell: function(data) {
+            if (data.row.index === rows.length - 1) {
+                data.cell.styles.fillColor = [241, 245, 249];
+                data.cell.styles.fontStyle = 'bold';
+            }
+            if (data.section === 'body' && data.column.index === 7) {
+                const val = data.cell.raw;
+                if (typeof val === 'number' && val < 0) {
+                    data.cell.styles.textColor = [220, 38, 38];
+                    data.cell.styles.fontStyle = 'bold';
+                }
+            }
+        }
+    });
+
+    doc.save("stock_opname.pdf");
+    showToast("PDF berhasil diunduh");
+}
+
+function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove("show"), 2500);
+}
+</script>
+
+</body>
+</html>
