@@ -87,8 +87,6 @@
         .btn svg { width: 15px; height: 15px; }
         .btn-accent { background: var(--accent); color: #fff; border-color: var(--accent); }
         .btn-accent:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
-        
-        /* Warna khusus untuk tombol Hapus Semua */
         .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
         .btn-danger:hover { background: var(--danger-hover); border-color: var(--danger-hover); }
 
@@ -127,25 +125,29 @@
             border-radius: 10px; box-shadow: var(--shadow); overflow: hidden;
         }
         
-        .table-scroll { 
-            overflow-x: auto; 
-            max-height: 65vh; 
-            overflow-y: auto; 
-        }
+        .table-scroll { overflow-x: auto; max-height: 65vh; overflow-y: auto; }
 
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-        }
-        
-        thead { position: sticky; top: 0; z-index: 2; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { position: sticky; top: 0; z-index: 3; }
 
         th {
             background: var(--header-bg); color: var(--header-text);
-            padding: 10px 12px; font-size: 12px; font-weight: 600;
+            padding: 6px 8px; font-size: 11px; font-weight: 600;
             text-transform: uppercase; letter-spacing: 0.3px;
-            text-align: center; white-space: nowrap; border-bottom: 2px solid #0f172a;
+            text-align: center; border-bottom: 2px solid #0f172a;
+            vertical-align: middle;
         }
+
+        th.no-wrap-head { white-space: nowrap; }
+
+        /* Style untuk select kecil di dalam th */
+        th select.sort-select {
+            display: block; width: 100%; margin-top: 4px;
+            padding: 3px 4px; font-size: 10px; border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.3); background: #334155;
+            color: #fff; cursor: pointer; min-width: 90px;
+        }
+        th select.sort-select:focus { outline: 1px solid var(--accent); }
 
         td {
             padding: 6px 12px; font-size: 13px; border-bottom: 1px solid #e5e7eb;
@@ -165,15 +167,11 @@
             font-variant-numeric: tabular-nums; background: #fff;
             transition: border-color 0.15s, box-shadow 0.15s;
         }
-        .fisik-input:focus {
-            outline: none; border-color: var(--input-focus);
-            box-shadow: 0 0 0 2px rgba(59,130,246,.2);
-        }
+        .fisik-input:focus { outline: none; border-color: var(--input-focus); box-shadow: 0 0 0 2px rgba(59,130,246,.2); }
 
         .minus-neg {
             color: var(--danger); font-weight: 700; background: var(--danger-bg);
-            border-radius: 4px; padding: 2px 6px; display: inline-block;
-            min-width: 40px; text-align: center;
+            border-radius: 4px; padding: 2px 6px; display: inline-block; min-width: 40px; text-align: center;
         }
         .minus-zero { color: var(--muted); }
         .minus-pos { color: var(--success); font-weight: 600; }
@@ -195,7 +193,7 @@
 
         tfoot td {
             background: #f1f5f9; font-weight: 700;
-            border-top: 2px solid var(--border); position: sticky; bottom: 0;
+            border-top: 2px solid var(--border); position: sticky; bottom: 0; z-index: 2;
         }
 
         @media (max-width: 768px) {
@@ -244,9 +242,8 @@
 
         <div class="spacer"></div>
 
-        <!-- TOMBOL HAPUS SEMUA -->
         <button class="btn btn-danger" id="btnDeleteAll" onclick="deleteAll()" disabled>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             Hapus Semua
         </button>
 
@@ -256,7 +253,7 @@
         </button>
         
         <button class="btn btn-accent" id="btnExcel" onclick="downloadExcel()" disabled>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             Excel
         </button>
         <button class="btn btn-accent" id="btnPDF" onclick="downloadPDF()" disabled>
@@ -289,16 +286,65 @@
             <table id="table">
                 <thead>
                     <tr>
-                        <th style="width:50px;">No</th>
-                        <th>Tipe Lokasi</th>
-                        <th>Nama</th>
-                        <th>Part</th>
-                        <th>Deskripsi Part</th>
-                        <th style="width:70px;">QTY</th>
-                        <th style="width:75px;">QTY Alloc</th>
-                        <th style="width:85px;">Available</th>
-                        <th style="width:85px;">Fisik</th>
-                        <th style="width:75px;">Selisih</th>
+                        <th class="no-wrap-head" style="width:50px;">No</th>
+                        <th class="no-wrap-head">
+                            Tipe Lokasi
+                            <select class="sort-select" onchange="sortTable('Tipe Lokasi', this.value)">
+                                <option value="default">Default</option>
+                                <option value="asc">A → Z</option>
+                                <option value="desc">Z → A</option>
+                            </select>
+                        </th>
+                        <th class="no-wrap-head">
+                            Nama
+                            <select class="sort-select" onchange="sortTable('Nama', this.value)">
+                                <option value="default">Default</option>
+                                <option value="asc">A → Z</option>
+                                <option value="desc">Z → A</option>
+                            </select>
+                        </th>
+                        <th class="no-wrap-head">
+                            Part
+                            <select class="sort-select" onchange="sortTable('Part', this.value)">
+                                <option value="default">Default</option>
+                                <option value="asc">A → Z</option>
+                                <option value="desc">Z → A</option>
+                            </select>
+                        </th>
+                        <th class="no-wrap-head">
+                            Deskripsi Part
+                            <select class="sort-select" onchange="sortTable('Deskripsi Part', this.value)">
+                                <option value="default">Default</option>
+                                <option value="asc">A → Z</option>
+                                <option value="desc">Z → A</option>
+                            </select>
+                        </th>
+                        <th class="no-wrap-head" style="width:100px;">
+                            QTY
+                            <select class="sort-select" onchange="sortTable('QTY', this.value)">
+                                <option value="default">Default</option>
+                                <option value="asc">Terkecil</option>
+                                <option value="desc">Terbesar</option>
+                            </select>
+                        </th>
+                        <th class="no-wrap-head" style="width:100px;">
+                            QTY Alloc
+                            <select class="sort-select" onchange="sortTable('QTY Alloc', this.value)">
+                                <option value="default">Default</option>
+                                <option value="asc">Terkecil</option>
+                                <option value="desc">Terbesar</option>
+                            </select>
+                        </th>
+                        <th class="no-wrap-head" style="width:100px;">
+                            Available
+                            <select class="sort-select" onchange="sortTable('Available', this.value)">
+                                <option value="default">Default</option>
+                                <option value="asc">Terkecil</option>
+                                <option value="desc">Terbesar</option>
+                            </select>
+                        </th>
+                        <th class="no-wrap-head" style="width:85px;">Fisik</th>
+                        <th class="no-wrap-head" style="width:75px;">Selisih</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
@@ -325,19 +371,17 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const HEADERS = [
-    "Nomor", "Tipe Lokasi", "Nama", "Part", "Deskripsi Part",
-    "QTY", "QTY Alloc", "Available", "Fisik", "Selisih"
-];
+const HEADERS = ["Nomor", "Tipe Lokasi", "Nama", "Part", "Deskripsi Part", "QTY", "QTY Alloc", "Available", "Fisik", "Selisih"];
+const HEADERS_PDF = ["No", "Part", "Deskripsi Part", "QTY", "Alloc", "Available", "Fisik", "Selisih"];
 
-const HEADERS_PDF = [
-    "No", "Part", "Deskripsi Part",
-    "QTY", "Alloc", "Available", "Fisik", "Selisih"
-];
+let allData = []; // Menyimpan data mentah asli
+let sortedData = []; // Menyimpan data yang sudah di-sort
+let filteredIndices = []; // Menyimpan index data yang sudah difilter (dari sortedData)
+let fisikMap = {}; // Key: index allData, Value: fisik
 
-let allData = [];
-let filteredIndices = [];
-let fisikMap = {};
+// Variabel untuk menyimpan state sortir terakhir
+let currentSortCol = '';
+let currentSortDir = 'default';
 
 document.getElementById('upload').addEventListener('change', handleFile);
 
@@ -358,9 +402,13 @@ function handleFile(e) {
             return item;
         });
 
+        // Reset sort state saat upload file baru
+        currentSortCol = '';
+        currentSortDir = 'default';
+        document.querySelectorAll('.sort-select').forEach(s => s.value = 'default');
+
         fisikMap = {};
-        populateFilters();
-        applyFilter();
+        applySortingAndFiltering(); // Langsung proses awal
         enableButtons();
 
         document.getElementById('emptyState').style.display = 'none';
@@ -372,37 +420,60 @@ function handleFile(e) {
     reader.readAsArrayBuffer(file);
 }
 
-function populateFilters() {
-    const lokasiSet = new Set();
-    const namaSet = new Set();
-
-    allData.forEach(item => {
-        if (item["Tipe Lokasi"]) lokasiSet.add(item["Tipe Lokasi"]);
-        if (item["Nama"]) namaSet.add(item["Nama"]);
+// === FUNGSI SORTIR BARU ===
+function sortTable(column, direction) {
+    currentSortCol = column;
+    currentSortDir = direction;
+    
+    // Reset semua dropdown lain kecuali yang sedang diklik
+    document.querySelectorAll('.sort-select').forEach(sel => {
+        if (sel.onchange.toString().includes(column)) {
+            sel.value = direction;
+        } else {
+            sel.value = 'default';
+        }
     });
 
-    const fLokasi = document.getElementById("filterLokasi");
-    const fNama = document.getElementById("filterNama");
-
-    fLokasi.innerHTML = '<option value="ALL">Semua</option>';
-    fNama.innerHTML = '<option value="ALL">Semua</option>';
-
-    [...lokasiSet].sort().forEach(v => {
-        fLokasi.innerHTML += `<option value="${v}">${v}</option>`;
-    });
-    [...namaSet].sort().forEach(v => {
-        fNama.innerHTML += `<option value="${v}">${v}</option>`;
-    });
+    applySortingAndFiltering();
 }
 
-function applyFilter() {
+function applySortingAndFiltering() {
+    // 1. Proses Sortir berdasarkan allData
+    let dataToProcess = allData.map((item, idx) => ({ ...item, _originalIdx: idx }));
+    
+    if (currentSortCol !== '' && currentSortDir !== 'default') {
+        const isNumberCol = ['QTY', 'QTY Alloc', 'Available'].includes(currentSortCol);
+        
+        dataToProcess.sort((a, b) => {
+            let valA = a[currentSortCol] || "";
+            let valB = b[currentSortCol] || "";
+
+            if (isNumberCol) {
+                valA = parseFloat(valA) || 0;
+                valB = parseFloat(valB) || 0;
+                return currentSortDir === 'asc' ? valA - valB : valB - valA;
+            } else {
+                valA = valA.toString().toLowerCase();
+                valB = valB.toString().toLowerCase();
+                if (valA < valB) return currentSortCol === 'asc' ? -1 : 1;
+                if (valA > valB) return currentSortCol === 'asc' ? 1 : -1;
+                return 0;
+            }
+        });
+    }
+
+    sortedData = dataToProcess;
+    
+    // 2. Proses Filter (Lokasi, Nama, Pencarian) dari data yang sudah di-sort
     const lokasi = document.getElementById("filterLokasi").value;
     const nama = document.getElementById("filterNama").value;
     const search = document.getElementById("searchInput").value.toLowerCase().trim();
 
-    filteredIndices = [];
+    // Update Dropdown Filter berdasarkan data yang sudah di-sort (agar urutannya ikut sort)
+    populateFilters();
 
-    allData.forEach((item, idx) => {
+    filteredIndices = [];
+    sortedData.forEach((item, idx) => {
         if (lokasi !== "ALL" && item["Tipe Lokasi"] !== lokasi) return;
         if (nama !== "ALL" && item["Nama"] !== nama) return;
         if (search && !(item["Deskripsi Part"] || "").toLowerCase().includes(search)
@@ -415,6 +486,42 @@ function applyFilter() {
     updateSummary();
 }
 
+function populateFilters() {
+    const lokasiSet = new Set();
+    const namaSet = new Set();
+
+    sortedData.forEach(item => {
+        if (item["Tipe Lokasi"]) lokasiSet.add(item["Tipe Lokasi"]);
+        if (item["Nama"]) namaSet.add(item["Nama"]);
+    });
+
+    const fLokasi = document.getElementById("filterLokasi");
+    const fNama = document.getElementById("filterNama");
+
+    // Simpan nilai yang sedang aktif sebelum di-render ulang
+    const activeLokasi = fLokasi.value;
+    const activeNama = fNama.value;
+
+    fLokasi.innerHTML = '<option value="ALL">Semua</option>';
+    fNama.innerHTML = '<option value="ALL">Semua</option>';
+
+    [...lokasiSet].sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase())).forEach(v => {
+        fLokasi.innerHTML += `<option value="${v}">${v}</option>`;
+    });
+    [...namaSet].sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase())).forEach(v => {
+        fNama.innerHTML += `<option value="${v}">${v}</option>`;
+    });
+
+    // Kembalikan nilai yang aktif (jika masih ada di daftar)
+    if (lokasiSet.has(activeLokasi)) fLokasi.value = activeLokasi;
+    if (namaSet.has(activeNama)) fNama.value = activeNama;
+}
+
+function applyFilter() {
+    // Saat filter berubah, gunakan ulang urutan sort yang sedang aktif
+    applySortingAndFiltering();
+}
+
 function getAvail(item) {
     return (parseFloat(item["QTY"]) || 0) - (parseFloat(item["QTY Alloc"]) || 0);
 }
@@ -424,9 +531,10 @@ function renderTable() {
     tbody.innerHTML = "";
 
     filteredIndices.forEach(idx => {
-        const item = allData[idx];
+        const item = sortedData[idx]; // AMBIL DARI sortedData
+        const origIdx = item._originalIdx; // Index asli untuk ambil fisikMap
         const avail = getAvail(item);
-        const fisik = fisikMap[idx] !== undefined && fisikMap[idx] !== '' ? fisikMap[idx] : '';
+        const fisik = fisikMap[origIdx] !== undefined && fisikMap[origIdx] !== '' ? fisikMap[origIdx] : '';
         const minus = fisik !== '' ? fisik - avail : null;
 
         const tr = document.createElement("tr");
@@ -448,7 +556,7 @@ function renderTable() {
         input.className = "fisik-input";
         input.value = fisik;
         input.min = "0";
-        input.dataset.idx = idx;
+        input.dataset.idx = origIdx; // Simpan original index
         input.addEventListener("input", onFisikInput);
         input.addEventListener("keydown", onFisikKeydown);
         tdFisik.appendChild(input);
@@ -456,7 +564,7 @@ function renderTable() {
 
         const tdMinus = document.createElement("td");
         tdMinus.className = "num center";
-        tdMinus.id = "minus-" + idx;
+        tdMinus.id = "minus-" + origIdx;
 
         if (minus === null) {
             tdMinus.innerHTML = '';
@@ -481,33 +589,26 @@ function makeTD(value, cls) {
 }
 
 function onFisikInput(e) {
-    const idx = parseInt(e.target.dataset.idx);
+    const idx = parseInt(e.target.dataset.idx); // Ambil original index
     const val = e.target.value.trim();
     fisikMap[idx] = val === '' ? '' : parseFloat(val);
 
-    const avail = getAvail(allData[idx]);
+    const item = allData[idx]; // Cari di allData berdasarkan index asli
+    const avail = getAvail(item);
     const fisik = fisikMap[idx];
     const minus = fisik !== '' ? fisik - avail : null;
 
     const tdMinus = document.getElementById("minus-" + idx);
     if (tdMinus) {
-        if (minus === null) {
-            tdMinus.innerHTML = '';
-        } else if (minus < 0) {
-            tdMinus.innerHTML = `<span class="minus-neg">${minus}</span>`;
-        } else if (minus === 0) {
-            tdMinus.innerHTML = `<span class="minus-zero">0</span>`;
-        } else {
-            tdMinus.innerHTML = `<span class="minus-pos">+${minus}</span>`;
-        }
+        if (minus === null) tdMinus.innerHTML = '';
+        else if (minus < 0) tdMinus.innerHTML = `<span class="minus-neg">${minus}</span>`;
+        else if (minus === 0) tdMinus.innerHTML = `<span class="minus-zero">0</span>`;
+        else tdMinus.innerHTML = `<span class="minus-pos">+${minus}</span>`;
     }
 
     const tr = e.target.closest("tr");
-    if (minus !== null && minus < 0) {
-        tr.classList.add("row-minus");
-    } else {
-        tr.classList.remove("row-minus");
-    }
+    if (minus !== null && minus < 0) tr.classList.add("row-minus");
+    else tr.classList.remove("row-minus");
 
     updateSummary();
     updateFooter();
@@ -534,10 +635,11 @@ function updateSummary() {
     let filled = 0, minusCount = 0;
 
     filteredIndices.forEach(idx => {
-        const f = fisikMap[idx];
+        const origIdx = sortedData[idx]._originalIdx;
+        const f = fisikMap[origIdx];
         if (f !== '' && f !== undefined) {
             filled++;
-            if (f - getAvail(allData[idx]) < 0) minusCount++;
+            if (f - getAvail(sortedData[idx]) < 0) minusCount++;
         }
     });
 
@@ -551,11 +653,12 @@ function updateFooter() {
     let tQty = 0, tAlloc = 0, tAvail = 0, tFisik = 0, tMinus = 0, hasFisik = false;
 
     filteredIndices.forEach(idx => {
-        const item = allData[idx];
+        const item = sortedData[idx];
+        const origIdx = item._originalIdx;
         tQty += parseFloat(item["QTY"]) || 0;
         tAlloc += parseFloat(item["QTY Alloc"]) || 0;
         tAvail += getAvail(item);
-        const f = fisikMap[idx];
+        const f = fisikMap[origIdx];
         if (f !== '' && f !== undefined) {
             tFisik += f;
             tMinus += f - getAvail(item);
@@ -578,35 +681,22 @@ function clearAllFisik() {
     showToast("Semua input Fisik telah direset");
 }
 
-// === FUNGSI HAPUS SEMUA ===
 function deleteAll() {
-    // 1. Kosongkan semua variabel data
-    allData = [];
-    filteredIndices = [];
-    fisikMap = {};
-
-    // 2. Bersihkan isi tabel
+    allData = []; sortedData = []; filteredIndices = []; fisikMap = {};
+    currentSortCol = ''; currentSortDir = 'default';
     document.getElementById("tableBody").innerHTML = "";
-    
-    // 3. Reset tampilan ke kondisi awal (kosong)
     document.getElementById("emptyState").style.display = '';
     document.getElementById("summary").style.display = 'none';
     document.getElementById("tableFoot").style.display = 'none';
-
-    // 4. Reset filter dropdown
     document.getElementById("filterLokasi").innerHTML = '<option value="ALL">Semua</option>';
     document.getElementById("filterNama").innerHTML = '<option value="ALL">Semua</option>';
     document.getElementById("searchInput").value = '';
-
-    // 5. Reset input file agar bisa upload file yang sama lagi
+    document.querySelectorAll('.sort-select').forEach(s => s.value = 'default');
     document.getElementById('upload').value = '';
-
-    // 6. Nonaktifkan tombol aksi
     document.getElementById("btnDeleteAll").disabled = true;
     document.getElementById("btnClearFisik").disabled = true;
     document.getElementById("btnExcel").disabled = true;
     document.getElementById("btnPDF").disabled = true;
-
     showToast("Semua data berhasil dihapus");
 }
 
@@ -619,166 +709,74 @@ function enableButtons() {
 
 function downloadExcel() {
     const rows = [];
-
     filteredIndices.forEach(idx => {
-        const item = allData[idx];
+        const item = sortedData[idx];
         const avail = getAvail(item);
-        const fisik = fisikMap[idx];
+        const fisik = fisikMap[item._originalIdx];
         const isFilled = fisik !== '' && fisik !== undefined;
-
         rows.push({
-            "Nomor": item["Nomor"] || "",
-            "Tipe Lokasi": item["Tipe Lokasi"] || "",
-            "Nama": item["Nama"] || "",
-            "Part": item["Part"] || "",
+            "Nomor": item["Nomor"] || "", "Tipe Lokasi": item["Tipe Lokasi"] || "",
+            "Nama": item["Nama"] || "", "Part": item["Part"] || "",
             "Deskripsi Part": item["Deskripsi Part"] || "",
-            "QTY": parseFloat(item["QTY"]) || 0,
-            "QTY Alloc": parseFloat(item["QTY Alloc"]) || 0,
-            "Available QTY": avail,
-            "Fisik": isFilled ? fisik : "",
-            "Minus": isFilled ? (fisik - avail) : ""
+            "QTY": parseFloat(item["QTY"]) || 0, "QTY Alloc": parseFloat(item["QTY Alloc"]) || 0,
+            "Available QTY": avail, "Fisik": isFilled ? fisik : "", "Minus": isFilled ? (fisik - avail) : ""
         });
     });
-
     let tQty = 0, tAlloc = 0, tAvail = 0, tFisik = 0, tMinus = 0, hasFisik = false;
     rows.forEach(r => {
-        tQty += r["QTY"] || 0;
-        tAlloc += r["QTY Alloc"] || 0;
-        tAvail += r["Available QTY"] || 0;
-        if (r["Fisik"] !== "") {
-            tFisik += r["Fisik"] || 0;
-            tMinus += r["Minus"] || 0;
-            hasFisik = true;
-        }
+        tQty += r["QTY"] || 0; tAlloc += r["QTY Alloc"] || 0; tAvail += r["Available QTY"] || 0;
+        if (r["Fisik"] !== "") { tFisik += r["Fisik"] || 0; tMinus += r["Minus"] || 0; hasFisik = true; }
     });
-    rows.push({
-        "Nomor": "", "Tipe Lokasi": "", "Nama": "", "Part": "",
-        "Deskripsi Part": "TOTAL", "QTY": tQty, "QTY Alloc": tAlloc,
-        "Available QTY": tAvail, "Fisik": hasFisik ? tFisik : "", "Minus": hasFisik ? tMinus : ""
-    });
-
+    rows.push({"Nomor":"","Tipe Lokasi":"","Nama":"","Part":"","Deskripsi Part":"TOTAL","QTY":tQty,"QTY Alloc":tAlloc,"Available QTY":tAvail,"Fisik":hasFisik?tFisik:"","Minus":hasFisik?tMinus:""});
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Stock Opname");
-    ws["!cols"] = [
-        {wch:6},{wch:16},{wch:18},{wch:14},{wch:40},
-        {wch:8},{wch:10},{wch:12},{wch:10},{wch:10}
-    ];
+    ws["!cols"] = [{wch:6},{wch:16},{wch:18},{wch:14},{wch:40},{wch:8},{wch:10},{wch:12},{wch:10},{wch:10}];
     XLSX.writeFile(wb, "stock_opname.xlsx");
     showToast("Excel berhasil diunduh");
 }
 
 function downloadPDF() {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ 
-        orientation: 'portrait', 
-        format: 'a4',
-        unit: 'mm'
-    });
-
+    const doc = new jsPDF({ orientation: 'portrait', format: 'a4', unit: 'mm' });
     const rows = [];
-    
     filteredIndices.forEach((idx, loopIndex) => {
-        const item = allData[idx];
+        const item = sortedData[idx];
         const avail = getAvail(item);
-        const fisik = fisikMap[idx];
+        const fisik = fisikMap[item._originalIdx];
         const isFilled = fisik !== '' && fisik !== undefined;
-
-        rows.push([
-            loopIndex + 1, 
-            item["Part"] || "",
-            item["Deskripsi Part"] || "",
-            parseFloat(item["QTY"]) || 0,
-            parseFloat(item["QTY Alloc"]) || 0,
-            avail,
-            isFilled ? fisik : "",
-            isFilled ? (fisik - avail) : ""
-        ]);
+        rows.push([loopIndex + 1, item["Part"] || "", item["Deskripsi Part"] || "", parseFloat(item["QTY"]) || 0, parseFloat(item["QTY Alloc"]) || 0, avail, isFilled ? fisik : "", isFilled ? (fisik - avail) : ""]);
     });
-
     let tQty = 0, tAlloc = 0, tAvail = 0, tFisik = 0, tMinus = 0, hasFisik = false;
     rows.forEach(r => {
-        tQty += (typeof r[3] === 'number' ? r[3] : 0);
-        tAlloc += (typeof r[4] === 'number' ? r[4] : 0);
-        tAvail += (typeof r[5] === 'number' ? r[5] : 0);
-        if (r[6] !== "") {
-            tFisik += r[6] || 0;
-            tMinus += r[7] || 0;
-            hasFisik = true;
-        }
+        tQty += (typeof r[3] === 'number' ? r[3] : 0); tAlloc += (typeof r[4] === 'number' ? r[4] : 0); tAvail += (typeof r[5] === 'number' ? r[5] : 0);
+        if (r[6] !== "") { tFisik += r[6] || 0; tMinus += r[7] || 0; hasFisik = true; }
     });
     rows.push(["","","TOTAL", tQty, tAlloc, tAvail, hasFisik ? tFisik : "", hasFisik ? tMinus : ""]);
-
-    doc.setFontSize(14);
-    doc.text("DATA STOCK KOMPONEN (OPNAME)", 14, 15);
-
+    doc.setFontSize(14); doc.text("DATA STOCK KOMPONEN (OPNAME)", 14, 15);
     const lokasi = document.getElementById("filterLokasi").value;
     const nama = document.getElementById("filterNama").value;
     if (lokasi !== "ALL" || nama !== "ALL") {
-        doc.setFontSize(8);
-        doc.setTextColor(100);
-        let ft = "Filter: ";
-        if (lokasi !== "ALL") ft += "Lokasi=" + lokasi + " ";
-        if (nama !== "ALL") ft += "Nama=" + nama;
+        doc.setFontSize(8); doc.setTextColor(100); let ft = "Filter: ";
+        if (lokasi !== "ALL") ft += "Lokasi=" + lokasi + " "; if (nama !== "ALL") ft += "Nama=" + nama;
         doc.text(ft, 14, 20);
     }
-
     doc.autoTable({
-        head: [HEADERS_PDF],
-        body: rows,
-        startY: 23,
-        margin: { left: 14, right: 14 }, 
-        tableWidth: 'exact', 
-        styles: { 
-            fontSize: 7,
-            cellPadding: 1.5,
-            overflow: 'ellipsize', 
-            lineColor: [0, 0, 0], 
-            lineWidth: 0.1,
-            minCellHeight: 5
-        },
-        headStyles: { 
-            fillColor: [30, 41, 59], 
-            textColor: 255, 
-            fontStyle: 'bold',
-            fontSize: 7.5,
-            minCellHeight: 6
-        },
-        columnStyles: {
-            0: { halign: 'center', cellWidth: 'wrap' },  
-            1: { halign: 'left',   cellWidth: 'wrap' },  
-            2: { halign: 'left',   cellWidth: 'wrap' },  
-            3: { halign: 'right',  cellWidth: 'wrap' },  
-            4: { halign: 'right',  cellWidth: 'wrap' },  
-            5: { halign: 'right',  cellWidth: 'wrap' },  
-            6: { halign: 'right',  cellWidth: 'wrap' },  
-            7: { halign: 'right',  cellWidth: 'wrap' },  
-        },
+        head: [HEADERS_PDF], body: rows, startY: 23, margin: { left: 14, right: 14 }, tableWidth: 'exact',
+        styles: { fontSize: 7, cellPadding: 1.5, overflow: 'ellipsize', lineColor: [0, 0, 0], lineWidth: 0.1, minCellHeight: 5 },
+        headStyles: { fillColor: [30, 41, 59], textColor: 255, fontStyle: 'bold', fontSize: 7.5, minCellHeight: 6 },
+        columnStyles: { 0: { halign: 'center', cellWidth: 'wrap' }, 1: { halign: 'left', cellWidth: 'wrap' }, 2: { halign: 'left', cellWidth: 'wrap' }, 3: { halign: 'right', cellWidth: 'wrap' }, 4: { halign: 'right', cellWidth: 'wrap' }, 5: { halign: 'right', cellWidth: 'wrap' }, 6: { halign: 'right', cellWidth: 'wrap' }, 7: { halign: 'right', cellWidth: 'wrap' } },
         didParseCell: function(data) {
-            if (data.row.index === rows.length - 1) {
-                data.cell.styles.fillColor = [241, 245, 249];
-                data.cell.styles.fontStyle = 'bold';
-            }
-            if (data.section === 'body' && data.column.index === 7) {
-                const val = data.cell.raw;
-                if (typeof val === 'number' && val < 0) {
-                    data.cell.styles.textColor = [220, 38, 38];
-                    data.cell.styles.fontStyle = 'bold';
-                }
-            }
+            if (data.row.index === rows.length - 1) { data.cell.styles.fillColor = [241, 245, 249]; data.cell.styles.fontStyle = 'bold'; }
+            if (data.section === 'body' && data.column.index === 7) { const val = data.cell.raw; if (typeof val === 'number' && val < 0) { data.cell.styles.textColor = [220, 38, 38]; data.cell.styles.fontStyle = 'bold'; } }
         }
     });
-
-    doc.save("stock_opname.pdf");
-    showToast("PDF berhasil diunduh");
+    doc.save("stock_opname.pdf"); showToast("PDF berhasil diunduh");
 }
 
 function showToast(msg) {
-    const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.classList.add("show");
-    clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.remove("show"), 2500);
+    const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(t._timer); t._timer = setTimeout(() => t.classList.remove("show"), 2500);
 }
 </script>
 
