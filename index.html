@@ -222,40 +222,40 @@
 
         <div class="toolbar-group">
             <label>Lokasi</label>
-            <select id="filterLokasi" onchange="applyFilter()">
+            <select id="filterLokasi">
                 <option value="ALL">Semua</option>
             </select>
         </div>
 
         <div class="toolbar-group">
             <label>Nama</label>
-            <select id="filterNama" onchange="applyFilter()">
+            <select id="filterNama">
                 <option value="ALL">Semua</option>
             </select>
         </div>
 
         <div class="search-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="searchInput" placeholder="Cari deskripsi part..." oninput="applyFilter()">
+            <input type="text" id="searchInput" placeholder="Cari deskripsi part...">
         </div>
 
         <div class="spacer"></div>
 
-        <button class="btn btn-danger" id="btnDeleteAll" onclick="deleteAll()" disabled>
+        <button class="btn btn-danger" id="btnDeleteAll" disabled>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             Hapus Semua
         </button>
 
-        <button class="btn" id="btnClearFisik" onclick="clearAllFisik()" disabled>
+        <button class="btn" id="btnClearFisik" disabled>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="19" y1="6" x2="5" y2="20"/></svg>
             Reset Fisik
         </button>
         
-        <button class="btn btn-accent" id="btnExcel" onclick="downloadExcel()" disabled>
+        <button class="btn btn-accent" id="btnExcel" disabled>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             Excel
         </button>
-        <button class="btn btn-accent" id="btnPDF" onclick="downloadPDF()" disabled>
+        <button class="btn btn-accent" id="btnPDF" disabled>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             PDF
         </button>
@@ -281,62 +281,62 @@
     </div>
 
     <div class="table-wrap">
-        <div class="table-scroll">
+        <div class="table-scroll" id="tableScroll">
             <table id="table">
                 <thead>
                     <tr>
                         <th class="no-wrap-head" style="width:50px;">No</th>
-                        <th class="no-wrap-head">
+                        <th class="no-wrap-head" data-col="Tipe Lokasi">
                             Tipe Lokasi
-                            <select class="sort-select" onchange="sortTableDOM('Tipe Lokasi', this.value)">
+                            <select class="sort-select" data-sort-col="Tipe Lokasi">
                                 <option value="default">Default</option>
                                 <option value="asc">A → Z</option>
                                 <option value="desc">Z → A</option>
                             </select>
                         </th>
-                        <th class="no-wrap-head">
+                        <th class="no-wrap-head" data-col="Nama">
                             Nama
-                            <select class="sort-select" onchange="sortTableDOM('Nama', this.value)">
+                            <select class="sort-select" data-sort-col="Nama">
                                 <option value="default">Default</option>
                                 <option value="asc">A → Z</option>
                                 <option value="desc">Z → A</option>
                             </select>
                         </th>
-                        <th class="no-wrap-head">
+                        <th class="no-wrap-head" data-col="Part">
                             Part
-                            <select class="sort-select" onchange="sortTableDOM('Part', this.value)">
+                            <select class="sort-select" data-sort-col="Part">
                                 <option value="default">Default</option>
                                 <option value="asc">A → Z</option>
                                 <option value="desc">Z → A</option>
                             </select>
                         </th>
-                        <th class="no-wrap-head">
+                        <th class="no-wrap-head" data-col="Deskripsi Part">
                             Deskripsi Part
-                            <select class="sort-select" onchange="sortTableDOM('Deskripsi Part', this.value)">
+                            <select class="sort-select" data-sort-col="Deskripsi Part">
                                 <option value="default">Default</option>
                                 <option value="asc">A → Z</option>
                                 <option value="desc">Z → A</option>
                             </select>
                         </th>
-                        <th class="no-wrap-head" style="width:100px;">
+                        <th class="no-wrap-head" style="width:100px;" data-col="QTY">
                             QTY
-                            <select class="sort-select" onchange="sortTableDOM('QTY', this.value)">
+                            <select class="sort-select" data-sort-col="QTY">
                                 <option value="default">Default</option>
                                 <option value="asc">Terkecil</option>
                                 <option value="desc">Terbesar</option>
                             </select>
                         </th>
-                        <th class="no-wrap-head" style="width:100px;">
+                        <th class="no-wrap-head" style="width:100px;" data-col="QTY Alloc">
                             QTY Alloc
-                            <select class="sort-select" onchange="sortTableDOM('QTY Alloc', this.value)">
+                            <select class="sort-select" data-sort-col="QTY Alloc">
                                 <option value="default">Default</option>
                                 <option value="asc">Terkecil</option>
                                 <option value="desc">Terbesar</option>
                             </select>
                         </th>
-                        <th class="no-wrap-head" style="width:100px;">
+                        <th class="no-wrap-head" style="width:100px;" data-col="Available">
                             Available
-                            <select class="sort-select" onchange="sortTableDOM('Available', this.value)">
+                            <select class="sort-select" data-sort-col="Available">
                                 <option value="default">Default</option>
                                 <option value="asc">Terkecil</option>
                                 <option value="desc">Terbesar</option>
@@ -374,18 +374,25 @@ const HEADERS_PDF = ["No", "Part", "Deskripsi Part", "QTY", "Alloc", "Available"
 
 let allData = [];
 
-// Pemetaan nama kolom ke index <td> di tabel (supaya presisi saat sort)
 const COL_INDEX = {
-    "Tipe Lokasi": 1,
-    "Nama": 2,
-    "Part": 3,
-    "Deskripsi Part": 4,
-    "QTY": 5,
-    "QTY Alloc": 6,
-    "Available": 7
+    "Tipe Lokasi": 1, "Nama": 2, "Part": 3,
+    "Deskripsi Part": 4, "QTY": 5, "QTY Alloc": 6, "Available": 7
 };
 
 document.getElementById('upload').addEventListener('change', handleFile);
+document.getElementById('filterLokasi').addEventListener('change', applyFilter);
+document.getElementById('filterNama').addEventListener('change', applyFilter);
+document.getElementById('searchInput').addEventListener('input', applyFilter);
+document.getElementById('btnDeleteAll').addEventListener('click', deleteAll);
+document.getElementById('btnClearFisik').addEventListener('click', clearAllFisik);
+document.getElementById('btnExcel').addEventListener('click', downloadExcel);
+document.getElementById('btnPDF').addEventListener('click', downloadPDF);
+
+document.querySelectorAll('.sort-select').forEach(sel => {
+    sel.addEventListener('change', function() {
+        sortTableDOM(this.dataset.sortCol, this.value);
+    });
+});
 
 function handleFile(e) {
     const file = e.target.files[0];
@@ -404,7 +411,6 @@ function handleFile(e) {
             return item;
         });
 
-        // Reset sort dropdown
         document.querySelectorAll('.sort-select').forEach(s => s.value = 'default');
 
         populateFilters();
@@ -461,36 +467,20 @@ function applyFilter() {
         );
     }
 
+    document.querySelectorAll('.sort-select').forEach(s => s.value = 'default');
     renderTable(filtered);
     updateSummary();
+    updateFooter();
 }
 
-// === FUNGSI SORTIR LANGSUNG DI DOM (PRESISI) ===
 function sortTableDOM(column, direction) {
     if (direction === 'default') {
-        // Jika Default, kembalikan ke urutan allData
-        const lokasi = document.getElementById("filterLokasi").value;
-        const nama = document.getElementById("filterNama").value;
-        const search = document.getElementById("searchInput").value.toLowerCase().trim();
-        
-        let filtered = allData;
-        if (lokasi !== "ALL") filtered = filtered.filter(item => item["Tipe Lokasi"] === lokasi);
-        if (nama !== "ALL") filtered = filtered.filter(item => item["Nama"] === nama);
-        if (search) {
-            filtered = filtered.filter(item => 
-                (item["Deskripsi Part"] || "").toLowerCase().includes(search) ||
-                (item["Nama"] || "").toLowerCase().includes(search) ||
-                (item["Part"] || "").toLowerCase().includes(search)
-            );
-        }
-        renderTable(filtered);
-        updateSummary();
+        applyFilter();
         return;
     }
 
-    // Reset dropdown lain kecuali yang sedang diklik
     document.querySelectorAll('.sort-select').forEach(sel => {
-        if (!sel.onchange.toString().includes(column)) sel.value = 'default';
+        if (sel.dataset.sortCol !== column) sel.value = 'default';
     });
 
     const tbody = document.getElementById("tableBody");
@@ -513,15 +503,13 @@ function sortTableDOM(column, direction) {
         }
     });
 
-    // Pasang ulang posisi baris di HTML (ini membuat input fisik ikut pindah)
     rows.forEach(row => tbody.appendChild(row));
-
-    // Perbaiki warna selang-seling (zebra strip)
     rows.forEach((row, index) => {
-        row.style.background = (index % 2 === 0) ? '' : '#f8fafc';
+        row.classList.toggle('row-alt-fix', index % 2 !== 0);
     });
 
     updateSummary();
+    updateFooter();
 }
 
 function getAvail(item) {
@@ -532,9 +520,10 @@ function renderTable(dataToRender) {
     const tbody = document.getElementById("tableBody");
     tbody.innerHTML = "";
 
-    dataToRender.forEach(item => {
+    dataToRender.forEach((item, index) => {
         const avail = getAvail(item);
         const tr = document.createElement("tr");
+        if (index % 2 !== 0) tr.classList.add('row-alt-fix');
 
         tr.appendChild(makeTD(item["Nomor"] || "", "center no-wrap"));
         tr.appendChild(makeTD(item["Tipe Lokasi"] || "", "no-wrap"));
@@ -545,7 +534,6 @@ function renderTable(dataToRender) {
         tr.appendChild(makeTD(parseFloat(item["QTY Alloc"]) || 0, "num"));
         tr.appendChild(makeTD(avail, "num"));
 
-        // Kolom Fisik
         const tdFisik = document.createElement("td");
         tdFisik.className = "center";
         const input = document.createElement("input");
@@ -554,10 +542,10 @@ function renderTable(dataToRender) {
         input.min = "0";
         input.addEventListener("input", onFisikInput);
         input.addEventListener("keydown", onFisikKeydown);
+        input.addEventListener("paste", onFisikPaste);
         tdFisik.appendChild(input);
         tr.appendChild(tdFisik);
 
-        // Kolom Selisih
         const tdMinus = document.createElement("td");
         tdMinus.className = "num center";
         tr.appendChild(tdMinus);
@@ -574,18 +562,23 @@ function makeTD(value, cls) {
 }
 
 function onFisikInput(e) {
-    const fisikVal = e.target.value.trim();
+    calculateRowSelisih(e.target);
+    updateSummary();
+    updateFooter();
+}
+
+function calculateRowSelisih(inputEl) {
+    const fisikVal = inputEl.value.trim();
     const fisik = fisikVal === '' ? '' : parseFloat(fisikVal);
-    const tr = e.target.closest("tr");
+    const tr = inputEl.closest("tr");
     const cells = tr.querySelectorAll("td");
     
-    // Hitung available dari teks di kolom QTY dan Alloc
     const qty = parseFloat(cells[5].innerText) || 0;
     const alloc = parseFloat(cells[6].innerText) || 0;
     const avail = qty - alloc;
     const minus = fisik !== '' ? fisik - avail : null;
 
-    const tdMinus = cells[9]; // Index kolom selisih
+    const tdMinus = cells[9]; 
     if (minus === null) tdMinus.innerHTML = '';
     else if (minus < 0) tdMinus.innerHTML = `<span class="minus-neg">${minus}</span>`;
     else if (minus === 0) tdMinus.innerHTML = `<span class="minus-zero">0</span>`;
@@ -593,24 +586,40 @@ function onFisikInput(e) {
 
     if (minus !== null && minus < 0) tr.classList.add("row-minus");
     else tr.classList.remove("row-minus");
-
-    updateSummary();
-    updateFooter();
 }
 
 function onFisikKeydown(e) {
-    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter") {
         e.preventDefault();
         const arr = Array.from(document.querySelectorAll(".fisik-input"));
         const ci = arr.indexOf(e.target);
-        const ni = e.key === "ArrowDown" ? ci + 1 : ci - 1;
-        if (ni >= 0 && ni < arr.length) { arr[ni].focus(); arr[ni].select(); }
+        const ni = e.key === "ArrowUp" ? ci - 1 : ci + 1;
+        
+        if (ni >= 0 && ni < arr.length) { 
+            arr[ni].focus(); 
+            arr[ni].select(); 
+            arr[ni].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
     }
-    if (e.key === "Enter") {
+}
+
+function onFisikPaste(e) {
+    const pastedData = e.clipboardData.getData('text');
+    if (pastedData.includes('\n') || pastedData.includes('\r')) {
         e.preventDefault();
         const arr = Array.from(document.querySelectorAll(".fisik-input"));
-        const ci = arr.indexOf(e.target);
-        if (ci + 1 < arr.length) { arr[ci + 1].focus(); arr[ci + 1].select(); }
+        const startIdx = arr.indexOf(e.target);
+        const lines = pastedData.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+        
+        lines.forEach((line, i) => {
+            const targetIdx = startIdx + i;
+            if (targetIdx < arr.length && line.trim() !== '') {
+                arr[targetIdx].value = parseFloat(line.trim()) || 0;
+                calculateRowSelisih(arr[targetIdx]);
+            }
+        });
+        updateSummary();
+        updateFooter();
     }
 }
 
@@ -641,39 +650,37 @@ function updateFooter() {
 
     rows.forEach(tr => {
         const cells = tr.querySelectorAll("td");
-        tQty += parseFloat(cells[5].innerText) || 0;
-        tAlloc += parseFloat(cells[6].innerText) || 0;
-        tAvail += parseFloat(cells[7].innerText) || 0;
+        const rowQty = parseFloat(cells[5].innerText) || 0;
+        const rowAlloc = parseFloat(cells[6].innerText) || 0;
+        
+        tQty += rowQty;
+        tAlloc += rowAlloc;
         
         const fisikVal = tr.querySelector(".fisik-input").value.trim();
         if (fisikVal !== '') {
             const f = parseFloat(fisikVal);
+            const rowAvail = rowQty - rowAlloc;
             tFisik += f;
-            tMinus += (f - tAvail); // Total minus per baris
+            tMinus += (f - rowAvail);
             hasFisik = true;
         }
     });
 
-    // Hitung total minus keseluruhan secara akurat
-    if (hasFisik) {
-        tMinus = 0;
-        rows.forEach(tr => {
-            const cells = tr.querySelectorAll("td");
-            const qty = parseFloat(cells[5].innerText) || 0;
-            const alloc = parseFloat(cells[6].innerText) || 0;
-            const avail = qty - alloc;
-            const fisikVal = tr.querySelector(".fisik-input").value.trim();
-            if (fisikVal !== '') {
-                tMinus += (parseFloat(fisikVal) - avail);
-            }
-        });
-    }
+    tAvail = tQty - tAlloc;
 
     document.getElementById("footQty").textContent = tQty;
     document.getElementById("footAlloc").textContent = tAlloc;
     document.getElementById("footAvail").textContent = tAvail;
     document.getElementById("footFisik").textContent = hasFisik ? tFisik : '';
-    document.getElementById("footMinus").textContent = hasFisik ? tMinus : '';
+    
+    const footMinusEl = document.getElementById("footMinus");
+    if (hasFisik) {
+        footMinusEl.textContent = tMinus;
+        footMinusEl.style.color = tMinus < 0 ? 'var(--danger)' : 'var(--success)';
+    } else {
+        footMinusEl.textContent = '';
+        footMinusEl.style.color = '';
+    }
 }
 
 function clearAllFisik() {
@@ -713,8 +720,6 @@ function enableButtons() {
 }
 
 function getDataFromDOM() {
-    // Fungsi untuk membaca apa pun yang tertampil di layar saat ini 
-    // (sudah termasuk hasil filter dan sortiran)
     const rows = document.querySelectorAll("#tableBody tr");
     const result = [];
     rows.forEach(tr => {
@@ -766,7 +771,11 @@ function downloadExcel() {
 
 function downloadPDF() {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'portrait', format: 'a4', unit: 'mm' });
+    
+    // 1. Siapkan Data
+    const now = new Date();
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const tanggalCetak = "Dicetak: " + now.toLocaleDateString('id-ID', options) + " " + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
     
     const data = getDataFromDOM();
     const rows = data.map((d, i) => [
@@ -780,11 +789,31 @@ function downloadPDF() {
     });
     rows.push(["","","TOTAL", tQty, tAlloc, tAvail, hasFisik ? tFisik : "", hasFisik ? tMinus : ""]);
 
-    doc.setFontSize(14); doc.text("DATA STOCK KOMPONEN (OPNAME)", 14, 15);
+    // 2. Hitung Total Halaman Terlebih Dahulu (Dry Run)
+    const docTemp = new jsPDF({ orientation: 'portrait', format: 'a4', unit: 'mm' });
+    docTemp.autoTable({
+        head: [HEADERS_PDF], body: rows, startY: 23, margin: { left: 14, right: 14 }, tableWidth: 'exact',
+        styles: { fontSize: 7, cellPadding: 1.5, overflow: 'ellipsize', lineColor: [0, 0, 0], lineWidth: 0.1, minCellHeight: 5 },
+        headStyles: { fillColor: [30, 41, 59], textColor: 255, fontStyle: 'bold', fontSize: 7.5, minCellHeight: 6 },
+        columnStyles: { 0: { halign: 'center' }, 1: { halign: 'left' }, 2: { halign: 'left' }, 3: { halign: 'right' }, 4: { halign: 'right' }, 5: { halign: 'right' }, 6: { halign: 'right' }, 7: { halign: 'right' } }
+    });
+    const totalPages = docTemp.internal.getNumberOfPages();
+
+    // 3. Render PDF Asli dengan Nomor Halaman yang Sudah Diketahui
+    const doc = new jsPDF({ orientation: 'portrait', format: 'a4', unit: 'mm' });
+
+    doc.setFontSize(14); 
+    doc.setTextColor(0);
+    doc.text("DATA STOCK KOMPONEN (OPNAME)", 14, 15);
+    
+    doc.setFontSize(8); 
+    doc.setTextColor(100); 
+    doc.text(tanggalCetak, doc.internal.pageSize.getWidth() - 14, 15, { align: "right" });
+    
     const lokasi = document.getElementById("filterLokasi").value;
     const nama = document.getElementById("filterNama").value;
     if (lokasi !== "ALL" || nama !== "ALL") {
-        doc.setFontSize(8); doc.setTextColor(100); let ft = "Filter: ";
+        let ft = "Filter: ";
         if (lokasi !== "ALL") ft += "Lokasi=" + lokasi + " "; if (nama !== "ALL") ft += "Nama=" + nama;
         doc.text(ft, 14, 20);
     }
@@ -793,13 +822,42 @@ function downloadPDF() {
         head: [HEADERS_PDF], body: rows, startY: 23, margin: { left: 14, right: 14 }, tableWidth: 'exact',
         styles: { fontSize: 7, cellPadding: 1.5, overflow: 'ellipsize', lineColor: [0, 0, 0], lineWidth: 0.1, minCellHeight: 5 },
         headStyles: { fillColor: [30, 41, 59], textColor: 255, fontStyle: 'bold', fontSize: 7.5, minCellHeight: 6 },
-        columnStyles: { 0: { halign: 'center', cellWidth: 'wrap' }, 1: { halign: 'left', cellWidth: 'wrap' }, 2: { halign: 'left', cellWidth: 'wrap' }, 3: { halign: 'right', cellWidth: 'wrap' }, 4: { halign: 'right', cellWidth: 'wrap' }, 5: { halign: 'right', cellWidth: 'wrap' }, 6: { halign: 'right', cellWidth: 'wrap' }, 7: { halign: 'right', cellWidth: 'wrap' } },
+        columnStyles: { 
+            0: { halign: 'center', cellWidth: 'wrap' }, 
+            1: { halign: 'left', cellWidth: 'wrap' }, 
+            2: { halign: 'left', cellWidth: 'wrap' }, 
+            3: { halign: 'right', cellWidth: 'wrap' }, 
+            4: { halign: 'right', cellWidth: 'wrap' }, 
+            5: { halign: 'right', cellWidth: 'wrap' }, 
+            6: { halign: 'right', cellWidth: 'wrap' }, 
+            7: { halign: 'right', cellWidth: 'wrap' } 
+        },
         didParseCell: function(data) {
             if (data.row.index === rows.length - 1) { data.cell.styles.fillColor = [241, 245, 249]; data.cell.styles.fontStyle = 'bold'; }
-            if (data.section === 'body' && data.column.index === 7) { const val = data.cell.raw; if (typeof val === 'number' && val < 0) { data.cell.styles.textColor = [220, 38, 38]; data.cell.styles.fontStyle = 'bold'; } }
+            if (data.section === 'body' && data.column.index === 7) { 
+                const val = data.cell.raw; 
+                if (typeof val === 'number' && val < 0) { data.cell.styles.textColor = [220, 38, 38]; data.cell.styles.fontStyle = 'bold'; } 
+            }
+        },
+        didDrawPage: function(data) {
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const currentPage = doc.internal.getCurrentPageInfo().pageNumber;
+            
+            // Format: "1 dari 7", "2 dari 7", dst...
+            doc.setFontSize(8);
+            doc.setTextColor(150);
+            doc.text(
+                currentPage + " dari " + totalPages, 
+                pageWidth - 14, 
+                pageHeight - 10, 
+                { align: "right" }
+            );
         }
     });
-    doc.save("stock_opname.pdf"); showToast("PDF berhasil diunduh");
+    
+    doc.save("stock_opname.pdf"); 
+    showToast("PDF berhasil diunduh");
 }
 
 function showToast(msg) {
