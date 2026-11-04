@@ -774,6 +774,30 @@ function getDataFromDOM() {
     return result;
 }
 
+// ===== Helper: membentuk nama file =====
+// Prioritas: Nama (jika dipilih) → Lokasi (UPPERCASE, jika dipilih) → "SEMUA"
+function getNamaSuffix() {
+    const namaFilter = document.getElementById("filterNama").value;
+    const lokasiFilter = document.getElementById("filterLokasi").value;
+
+    let suffix;
+    if (namaFilter && namaFilter !== "ALL") {
+        suffix = namaFilter;                       // Nama teknisi / sparepart dipilih
+    } else if (lokasiFilter && lokasiFilter !== "ALL") {
+        suffix = lokasiFilter.toUpperCase();       // Fallback: Lokasi (di-UPPERCASE)
+    } else {
+        suffix = "SEMUA";                          // Keduanya ALL
+    }
+
+    // Sanitasi karakter yang tidak valid untuk nama file
+    suffix = suffix.replace(/[\\/:*?"<>|]/g, "-").replace(/\s+/g, " ").trim();
+    return suffix;
+}
+
+function buildFileName(ext) {
+    return "Stock_opname " + getNamaSuffix() + "." + ext;
+}
+
 function downloadExcel() {
     const data = getDataFromDOM();
     
@@ -821,8 +845,9 @@ function downloadExcel() {
         {wch:10}  // Selisih
     ];
     
-    XLSX.writeFile(wb, "stock_opname.xlsx");
-    showToast("Excel berhasil diunduh");
+    const excelName = buildFileName("xlsx");
+    XLSX.writeFile(wb, excelName);
+    showToast("Excel berhasil diunduh: " + excelName);
 }
 
 function downloadPDF() {
@@ -908,8 +933,9 @@ function downloadPDF() {
         }
     });
     
-    doc.save("stock_opname.pdf"); 
-    showToast("PDF berhasil diunduh");
+    const pdfName = buildFileName("pdf");
+    doc.save(pdfName); 
+    showToast("PDF berhasil diunduh: " + pdfName);
 }
 
 function saveToLocalStorage() {
